@@ -266,27 +266,40 @@
                 return payload + crc16(payload);
             }
         
-            function gerarECopiarPixDoacao() {
-                const inputValor = document.getElementById('inputValorDoacao');
-                const valor = parseFloat(inputValor.value);
+        function gerarECopiarPixDoacao() {
+            const inputElement = document.getElementById('inputValorDoacao');
+            
+            // Extract only numbers from input (e.g., "R$ 5,00" -> "500")
+            let rawDigits = inputElement.value.replace(/\D/g, "");
+            
+            if (!rawDigits) {
+                alert('Por favor, informe um valor de doação válido.');
+                return;
+            }
         
-                if (isNaN(valor) || valor <= 0) {
-                    alert('Por favor, informe um valor de doação válido.');
-                    return;
-                }
+            // Convert raw digits to float (e.g., 500 / 100 -> 5.00)
+            const valor = parseFloat(rawDigits) / 100;
         
-                const pixPayload = gerarPayloadPix(CHAVE_PIX_RECEPTOR, NOME_RECEPTOR, CIDADE_RECEPTOR, valor);
+            if (isNaN(valor) || valor <= 0) {
+                alert('Por favor, informe um valor de doação válido.');
+                return;
+            }
         
-                navigator.clipboard.writeText(pixPayload).then(() => {
-                    const msg = document.getElementById('msgSucessoPix');
+            // Gerar o Payload do Pix com o valor convertido
+            const pixPayload = gerarPayloadPix(CHAVE_PIX_RECEPTOR, NOME_RECEPTOR, CIDADE_RECEPTOR, valor);
+        
+            navigator.clipboard.writeText(pixPayload).then(() => {
+                const msg = document.getElementById('msgSucessoPix');
+                if (msg) {
                     msg.classList.remove('hidden');
                     setTimeout(() => {
                         msg.classList.add('hidden');
                     }, 5000);
-                }).catch(err => {
-                    alert('Não foi possível copiar automaticamente. Tente novamente.');
-                });
-            }
+                }
+            }).catch(err => {
+                alert('Não foi possível copiar automaticamente. Tente novamente.');
+            });
+        }
         </script>
 
     <!-- Lógica JavaScript do App -->
