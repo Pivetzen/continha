@@ -11,14 +11,25 @@
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- ÁREA DE ANÚNCIO SUPERIOR (Ex: Google AdSense Banner) -->
-    <div class="bg-slate-200 border-b border-slate-300 py-2 text-center text-xs text-slate-500">
-        <!-- Substituir o conteúdo abaixo pelo script/tag real do AdSense quando aprovado -->
-        <div class="ad-container max-w-xl mx-auto bg-slate-300 h-16 flex items-center justify-center rounded border border-dashed border-slate-400">
-            <span>Espaço para Anúncio (Topo - AdSense Banner)</span>
+    <!-- BANNER ADSTERRA FIXO NO TOPO -->
+    <div class="fixed top-0 left-0 w-full z-50 bg-slate-200 border-b border-slate-300 py-1.5 text-center text-xs text-slate-500 shadow-sm">
+        <div class="ad-container max-w-xl mx-auto min-h-[50px] flex items-center justify-center rounded">
+            
+            <!-- SCRIPT DO ADSTERRA -->
+            <script>
+                atOptions = {
+                    'key' : 'f95477b41aad412b789767be6416723b',
+                    'format' : 'iframe',
+                    'height' : 50,
+                    'width' : 320,
+                    'params' : {}
+                };
+            </script>
+            <script src="https://www.highrevenueformat.com/f95477b41aad412b789767be6416723b/invoke.js"></script>
+    
         </div>
     </div>
-
+    
     <!-- Container Principal -->
     <main class="max-w-xl w-full mx-auto p-4 flex-grow mb-8">
         
