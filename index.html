@@ -193,7 +193,10 @@
     <!-- ÁREA DE ANÚNCIO INFERIOR E DOAÇÕES (Rodapé) -->
     <footer class="bg-slate-200 border-t border-slate-300 py-4 text-center text-xs text-slate-600 mt-auto">
         
-    <!-- SEÇÃO DE DOAÇÃO VIA PIX -->
+    <!-- RODAPÉ FIXO NO BOTTOM -->
+    <footer class="fixed bottom-0 left-0 w-full bg-slate-100 border-t border-slate-300 py-3 text-center text-xs text-slate-600 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        
+        <!-- SEÇÃO DE DOAÇÃO VIA PIX -->
         <div class="max-w-md mx-auto px-4 py-2.5 bg-white rounded-xl shadow-sm border border-slate-300 mb-1 mx-4 sm:mx-auto">
             <p class="font-semibold text-slate-800 mb-0.5 flex items-center justify-center gap-1">
                 <i class="fa-solid fa-heart text-red-500"></i> Gostou do app? Apoie o projeto!
@@ -620,6 +623,26 @@
             });
         }
 
+        // Máscara monetária acumulativa (estilo caixa eletrônico/maquininha)
+        function mascaraMoeda(input) {
+            // Remove tudo que não for dígito
+            let value = input.value.replace(/\D/g, "");
+            
+            if (!value || value === "00") {
+                input.value = "R$ 0,00";
+                return;
+            }
+            
+            // Converte para número dividindo por 100 para criar as casas decimais de centavos
+            let numberValue = (parseInt(value, 10) / 100).toFixed(2);
+            
+            // Formata no padrão brasileiro R$ X,XX
+            let formatted = numberValue
+                .replace(".", ",")
+                .replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        
+            input.value = "R$ " + formatted;
+        }
         // Inicializar dados na tela ao carregar
         document.addEventListener('DOMContentLoaded', () => {
             atualizarInterface();
