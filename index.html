@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Divisor de Conta - Rachar a Mesa</title>
+    <!-- Tailwind CSS para estilização rápida e responsiva -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Ícones FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ÁREA DE ANÚNCIO SUPERIOR (Ex: Google AdSense Banner) -->
+    <div class="bg-slate-200 border-b border-slate-300 py-2 text-center text-xs text-slate-500">
+        <!-- Substituir o conteúdo abaixo pelo script/tag real do AdSense quando aprovado -->
+        <div class="ad-container max-w-xl mx-auto bg-slate-300 h-16 flex items-center justify-center rounded border border-dashed border-slate-400">
+            <span>Espaço para Anúncio (Topo - AdSense Banner)</span>
+        </div>
+    </div>
+
+    <!-- Container Principal -->
+    <main class="max-w-xl w-full mx-auto p-4 flex-grow mb-8">
+        
+        <!-- Cabeçalho -->
+        <header class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-slate-900 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-receipt text-indigo-600"></i> Rachar a Mesa
+            </h1>
+            <p class="text-sm text-slate-600">Divida a conta do bar ou restaurante sem estresse</p>
+        </header>
+
+        <!-- Seção 1: Participantes -->
+        <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
+            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-users text-indigo-500"></i> 1. Pessoas na Mesa
+            </h2>
+            <div class="flex gap-2 mb-3">
+                <input type="text" id="inputNomePessoa" placeholder="Nome da pessoa" class="flex-grow border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button onclick="adicionarPessoa()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
+                    <i class="fa-solid fa-plus"></i> Adicionar
+                </button>
+            </div>
+            <div id="listaPessoas" class="flex flex-wrap gap-2">
+                <!-- Inserido via JS -->
+            </div>
+        </section>
+
+        <!-- Seção 2: Adicionar Itens -->
+        <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
+            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-utensils text-indigo-500"></i> 2. Consumo / Itens
+            </h2>
+            <div class="space-y-3">
+                <input type="text" id="inputNomeItem" placeholder="Nome do item (ex: Cerveja, Pizza)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-xs text-slate-500 block mb-1">Preço Total (R$)</label>
+                        <input type="number" step="0.01" id="inputValorItem" placeholder="0,00" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-500 block mb-1">Quem consumiu?</label>
+                        <select id="selectConsumidor" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="geral">Dividir para Todos</option>
+                            <!-- Preenchido via JS -->
+                        </select>
+                    </div>
+                </div>
+                <button onclick="adicionarItem()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-cart-plus"></i> Adicionar Item à Conta
+                </button>
+            </div>
+
+            <!-- Tabela de Itens Lançados -->
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-slate-500 text-xs">
+                            <th class="py-2">Item</th>
+                            <th class="py-2">Valor</th>
+                            <th class="py-2">Consumidor</th>
+                            <th class="py-2 text-right">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaItens">
+                        <!-- Inserido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Seção 3: Configurações Adicionais e Cálculo -->
+        <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
+            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-calculator text-indigo-500"></i> 3. Fechamento da Conta
+            </h2>
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm text-slate-700">Taxa de Serviço (Gorjeta 10%):</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="checkTaxa" onchange="calcularConta()" class="sr-only peer" checked>
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center mb-4">
+                <span class="text-sm font-medium text-slate-600">Total Geral da Mesa:</span>
+                <span id="valorTotalGeral" class="text-lg font-bold text-slate-900">R$ 0,00</span>
+            </div>
+
+            <button onclick="calcularConta()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow-sm">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Calcular Rateio
+            </button>
+        </section>
+
+        <!-- Seção 4: Resultados do Rateio -->
+        <section id="secaoResultado" class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 hidden">
+            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-wallet text-emerald-600"></i> Resultado por Pessoa
+            </h2>
+            
+            <div id="listaResultados" class="space-y-3 mb-4">
+                <!-- Inserido via JS -->
+            </div>
+
+            <button onclick="copiarResumoWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
+                <i class="fa-brands fa-whatsapp text-lg"></i> Copiar Resumo para o WhatsApp
+            </button>
+        </section>
+
+    </main>
+
+    <!-- ÁREA DE ANÚNCIO INFERIOR (Rodapé) -->
+    <footer class="bg-slate-200 border-t border-slate-300 py-3 text-center text-xs text-slate-500 mt-auto">
+        <!-- Substituir o conteúdo abaixo pelo script/tag real do AdSense quando aprovado -->
+        <div class="ad-container max-w-xl mx-auto bg-slate-300 h-20 flex items-center justify-center rounded border border-dashed border-slate-400 mx-4">
+            <span>Espaço para Anúncio (Rodapé - AdSense Banner Responsivo)</span>
+        </div>
+        <p class="mt-2 text-[10px] text-slate-400">Rachar a Mesa © 2026 - Todos os direitos reservados</p>
+    </footer>
+
+    <!-- Lógica JavaScript do App -->
+    <script>
+        let pessoas = JSON.parse(localStorage.getItem('rachar_pessoas')) || [];
+        let itens = JSON.parse(localStorage.getItem('rachar_itens')) || [];
+
+        function salvarDados() {
+            localStorage.setItem('rachar_pessoas', JSON.stringify(pessoas));
+            localStorage.setItem('rachar_itens', JSON.stringify(itens));
+        }
+
+        function adicionarPessoa() {
+            const input = document.getElementById('inputNomePessoa');
+            const nome = input.value.trim();
+            if (!nome) return alert('Digite o nome da pessoa.');
+            if (pessoas.includes(nome)) return alert('Esta pessoa já foi adicionada.');
+
+            pessoas.push(nome);
+            input.value = '';
+            salvarDados();
+            atualizarInterface();
+        }
+
+        function removerPessoa(index) {
+            const nomeRemovido = pessoas[index];
+            pessoas.splice(index, 1);
+            // Remove também itens vinculados exclusivamente a essa pessoa ou transforma em geral
+            itens.forEach(item => {
+                if (item.consumidor === nomeRemovido) item.consumidor = 'geral';
+            });
+            salvarDados();
+            atualizarInterface();
+        }
+
+        function adicionarItem() {
+            const nomeItem = document.getElementById('inputNomeItem').value.trim();
+            const valor = parseFloat(document.getElementById('inputValorItem').value);
+            const consumidor = document.getElementById('selectConsumidor').value;
+
+            if (!nomeItem) return alert('Informe o nome do item.');
+            if (isNaN(valor) || valor <= 0) return alert('Informe um valor válido.');
+
+            itens.push({ nome: nomeItem, valor: valor, consumidor: consumidor });
+            
+            document.getElementById('inputNomeItem').value = '';
+            document.getElementById('inputValorItem').value = '';
+            
+            salvarDados();
+            atualizarInterface();
+            calcularConta();
+        }
+
+        function removerItem(index) {
+            itens.splice(index, 1);
+            salvarDados();
+            atualizarInterface();
+            calcularConta();
+        }
+
+        function atualizarInterface() {
+            // Atualizar lista de tags de pessoas
+            const divPessoas = document.getElementById('listaPessoas');
+            divPessoas.innerHTML = '';
+            pessoas.forEach((p, index) => {
+                divPessoas.innerHTML += `
+                    <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1 rounded-full text-xs font-medium">
+                        ${p}
+                        <button onclick="removerPessoa(${index})" class="text-indigo-400 hover:text-red-500 ml-1"><i class="fa-solid fa-xmark"></i></button>
+                    </span>
+                `;
+            });
+
+            // Atualizar select de consumidores
+            const select = document.getElementById('selectConsumidor');
+            select.innerHTML = `<option value="geral">Dividir para Todos (${pessoas.length} pessoas)</option>`;
+            pessoas.forEach(p => {
+                select.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+
+            // Atualizar tabela de itens
+            const tbody = document.getElementById('tabelaItens');
+            tbody.innerHTML = '';
+            if (itens.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-slate-400 italic">Nenhum item lançado ainda.</td></tr>`;
+            } else {
+                itens.forEach((item, index) => {
+                    const consumidorLabel = item.consumidor === 'geral' ? 'Geral (Todos)' : item.consumidor;
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100">
+                            <td class="py-2 text-slate-800">${item.nome}</td>
+                            <td class="py-2 text-slate-600">R$ ${item.valor.toFixed(2)}</td>
+                            <td class="py-2 text-slate-500 text-xs"><span class="bg-slate-100 px-2 py-0.5 rounded">${consumidorLabel}</span></td>
+                            <td class="py-2 text-right">
+                                <button onclick="removerItem(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function calcularConta() {
+            if (pessoas.length === 0) {
+                document.getElementById('secaoResultado').classList.add('hidden');
+                return;
+            }
+
+            let somaBruta = itens.reduce((acc, item) => acc + item.valor, 0);
+            let aplicarTaxa = document.getElementById('checkTaxa').checked;
+            let taxaServico = aplicarTaxa ? somaBruta * 0.10 : 0;
+            let somaTotal = somaBruta + taxaServico;
+
+            document.getElementById('valorTotalGeral').innerText = `R$ ${somaTotal.toFixed(2)}`;
+
+            // Estrutura para calcular por pessoa
+            let totaisPorPessoa = {};
+            pessoas.forEach(p => totaisPorPessoa[p] = 0);
+
+            // 1. Processar itens individuais e itens gerais
+            let totalGeralItens = 0;
+            let itensEspecificosPorPessoa = {};
+            pessoas.forEach(p => itensEspecificosPorPessoa[p] = 0);
+
+            itens.forEach(item => {
+                if (item.consumidor === 'geral') {
+                    totalGeralItens += item.valor;
+                } else {
+                    if (totaisPorPessoa.hasOwnProperty(item.consumidor)) {
+                        itensEspecificosPorPessoa[item.consumidor] += item.valor;
+                    }
+                }
+            });
+
+            let custoGeralPorPessoa = pessoas.length > 0 ? totalGeralItens / pessoas.length : 0;
+            let taxaPorPessoa = pessoas.length > 0 ? taxaServico / pessoas.length : 0;
+
+            let resultadoFinalHTML = '';
+            window.dadosResumoWhatsapp = [];
+
+            pessoas.forEach(p => {
+                let consumoIndividual = itensEspecificosPorPessoa[p];
+                let subtotalPessoa = consumoIndividual + custoGeralPorPessoa + taxaPorPessoa;
+                totaisPorPessoa[p] = subtotalPessoa;
+
+                window.dadosResumoWhatsapp.push({ nome: p, total: subtotalPessoa });
+
+                resultadoFinalHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div>
+                            <span class="font-semibold text-slate-800 block">${p}</span>
+                            <span class="text-xs text-slate-500">Itens + Divisão Geral + Taxa</span>
+                        </div>
+                        <span class="text-indigo-600 font-bold text-md">R$ ${subtotalPessoa.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('listaResultados').innerHTML = resultadoFinalHTML;
+            document.getElementById('secaoResultado').classList.remove('hidden');
+        }
+
+        function copiarResumoWhatsApp() {
+            if (!window.dadosResumoWhatsapp || window.dadosResumoWhatsapp.length === 0) return;
+
+            let texto = "🧾 *Resumo da Conta - Rachar a Mesa* 🍻\n\n";
+            let somaGeral = 0;
+
+            window.dadosResumoWhatsapp.forEach(d => {
+                texto += `👤 *${d.nome}*: R$ ${d.total.toFixed(2)}\n`;
+                somaGeral += d.total;
+            });
+
+            texto += `\n*Total Geral da Mesa:* R$ ${somaGeral.toFixed(2)}`;
+            texto += `\n\n_Calculado via app web._`;
+
+            navigator.clipboard.writeText(texto).then(() => {
+                alert('Resumo copiado para a área de transferência! Cole no WhatsApp.');
+            }).catch(err => {
+                alert('Erro ao copiar resumo.');
+            });
+        }
+
+        // Inicializar dados na tela ao carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            atualizarInterface();
+            if (pessoas.length > 0 && itens.length > 0) {
+                calcularConta();
+            }
+        });
+    </script>
+</body>
+</html>
