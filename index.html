@@ -53,19 +53,29 @@
             </h2>
             <div class="space-y-3">
                 <input type="text" id="inputNomeItem" placeholder="Nome do item (ex: Cerveja, Pizza)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="text-xs text-slate-500 block mb-1">Preço Total (R$)</label>
                         <input type="number" step="0.01" id="inputValorItem" placeholder="0,00" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label class="text-xs text-slate-500 block mb-1">Quem consumiu?</label>
-                        <select id="selectConsumidor" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <label class="text-xs text-slate-500 block mb-1">Tipo de Divisão</label>
+                        <select id="selectTipoDivisao" onchange="alternarTipoDivisao()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="geral">Dividir para Todos</option>
-                            <!-- Preenchido via JS -->
+                            <option value="custom">Selecionar quem vai pagar</option>
                         </select>
                     </div>
                 </div>
+
+                <!-- Seletor de Participantes Específicos para o Item -->
+                <div id="containerSelecaoConsumidores" class="hidden bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <label class="text-xs font-semibold text-slate-700 block mb-2">Quem vai rachar este item?</label>
+                    <div id="checkboxesConsumidores" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
                 <button onclick="adicionarItem()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
                     <i class="fa-solid fa-cart-plus"></i> Adicionar Item à Conta
                 </button>
@@ -98,7 +108,7 @@
                         <tr class="border-b border-slate-200 text-slate-500 text-xs">
                             <th class="py-2">Item</th>
                             <th class="py-2">Valor</th>
-                            <th class="py-2">Consumidor</th>
+                            <th class="py-2">Rateio</th>
                             <th class="py-2 text-right">Ação</th>
                         </tr>
                     </thead>
@@ -115,7 +125,7 @@
                 <i class="fa-solid fa-calculator text-indigo-500"></i> 3. Fechamento da Conta
             </h2>
             
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-slate-700">Taxa de Serviço (%):</span>
                     <input type="number" id="inputPercentualTaxa" value="10" min="0" max="100" step="1" onchange="calcularConta()" class="w-16 border border-slate-300 rounded-lg px-2 py-1 text-center text-sm font-semibold text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -129,14 +139,33 @@
             </div>
 
             <button onclick="calcularConta()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow-sm">
-                <i class="fa-solid fa-file-invoice-dollar"></i> Calcular Rateio
+                <i class="fa-solid fa-file-invoice-dollar"></i> Calcular Rateio Detalhado
             </button>
         </section>
 
-        <!-- Seção 4: Resultados do Rateio -->
+        <!-- Seção 4: Modo de Divisão Igualitária Geral -->
+        <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
+            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-users-rectangle text-indigo-500"></i> Alternativa: Dividir Tudo Igualmente
+            </h2>
+            <div class="flex flex-col sm:flex-row gap-2 items-center">
+                <div class="flex-grow w-full">
+                    <label class="text-xs text-slate-500 block mb-1">Número de pessoas para dividir o total geral:</label>
+                    <input type="number" id="inputDivisaoIgualQtd" min="1" value="1" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button onclick="calcularDivisaoIgualTotal()" class="w-full sm:w-auto mt-auto bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-equals"></i> Calcular Igual
+                </button>
+            </div>
+            <div id="resultadoDivisaoIgual" class="mt-3 hidden bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
+                <!-- Preenchido via JS -->
+            </div>
+        </section>
+
+        <!-- Seção 5: Resultados do Rateio Detalhado -->
         <section id="secaoResultado" class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 hidden">
             <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-wallet text-emerald-600"></i> Resultado por Pessoa
+                <i class="fa-solid fa-wallet text-emerald-600"></i> Resultado por Pessoa (Consumo Real)
             </h2>
             
             <div id="listaResultados" class="space-y-3 mb-4">
@@ -144,7 +173,7 @@
             </div>
 
             <button onclick="copiarResumoWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
-                <i class="fa-brands fa-whatsapp text-lg"></i> Copiar Resumo em Formato Bobina (WhatsApp)
+                <i class="fa-brands fa-whatsapp text-lg"></i> Copiar Relatório Bobina (WhatsApp)
             </button>
         </section>
 
@@ -184,26 +213,77 @@
         function removerPessoa(index) {
             const nomeRemovido = pessoas[index];
             pessoas.splice(index, 1);
+            
+            // Atualizar itens onde a pessoa estava incluída
             itens.forEach(item => {
-                if (item.consumidor === nomeRemovido) item.consumidor = 'geral';
+                if (item.tipo === 'custom' && Array.isArray(item.consumidores)) {
+                    item.consumidores = item.consumidores.filter(p => p !== nomeRemovido);
+                    if (item.consumidores.length === 0) item.tipo = 'geral';
+                }
             });
+
             salvarDados();
             atualizarInterface();
+        }
+
+        function alternarTipoDivisao() {
+            const tipo = document.getElementById('selectTipoDivisao').value;
+            const container = document.getElementById('containerSelecaoConsumidores');
+            if (tipo === 'custom') {
+                container.classList.remove('hidden');
+                renderizarCheckboxesConsumidores();
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function renderizarCheckboxesConsumidores() {
+            const div = document.getElementById('checkboxesConsumidores');
+            div.innerHTML = '';
+            if (pessoas.length === 0) {
+                div.innerHTML = `<span class="text-xs text-slate-400 italic">Cadastre pessoas na mesa primeiro.</span>`;
+                return;
+            }
+            pessoas.forEach(p => {
+                div.innerHTML += `
+                    <label class="inline-flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded text-xs cursor-pointer hover:bg-slate-100">
+                        <input type="checkbox" value="${p}" class="checkbox-consumidor rounded text-indigo-600 focus:ring-indigo-500" checked>
+                        <span>${p}</span>
+                    </label>
+                `;
+            });
         }
 
         function adicionarItem() {
             const nomeItem = document.getElementById('inputNomeItem').value.trim();
             const valor = parseFloat(document.getElementById('inputValorItem').value);
-            const consumidor = document.getElementById('selectConsumidor').value;
+            const tipoDivisao = document.getElementById('selectTipoDivisao').value;
 
             if (!nomeItem) return alert('Informe o nome do item.');
             if (isNaN(valor) || valor <= 0) return alert('Informe um valor válido.');
 
-            // Armazenamos também um timestamp para manter a ordem original de cadastro
-            itens.push({ nome: nomeItem, valor: valor, consumidor: consumidor, id: Date.now() });
+            let itemObj = {
+                id: Date.now(),
+                nome: nomeItem,
+                valor: valor,
+                tipo: tipoDivisao,
+                consumidores: []
+            };
+
+            if (tipoDivisao === 'custom') {
+                const checkboxes = document.querySelectorAll('.checkbox-consumidor:checked');
+                checkboxes.forEach(cb => itemObj.consumidores.push(cb.value));
+                if (itemObj.consumidores.length === 0) {
+                    return alert('Selecione pelo menos uma pessoa para pagar este item.');
+                }
+            }
+            
+            itens.push(itemObj);
             
             document.getElementById('inputNomeItem').value = '';
             document.getElementById('inputValorItem').value = '';
+            document.getElementById('selectTipoDivisao').value = 'geral';
+            document.getElementById('containerSelecaoConsumidores').classList.add('hidden');
             
             salvarDados();
             atualizarInterface();
@@ -230,24 +310,20 @@
                 `;
             });
 
-            // Atualizar select de consumidores no formulário
-            const select = document.getElementById('selectConsumidor');
-            // Mantém a opção geral e popula com os nomes das pessoas
-            let selectHTML = `<option value="geral">Dividir para Todos (${pessoas.length} pessoas)</option>`;
-            pessoas.forEach(p => {
-                selectHTML += `<option value="${p}">${p}</option>`;
-            });
-            select.innerHTML = selectHTML;
+            // Atualizar input inputDivisaoIgualQtd se estiver vazio ou igual a 1
+            const inputQtdIgual = document.getElementById('inputDivisaoIgualQtd');
+            if (inputQtdIgual && pessoas.length > 0 && (inputQtdIgual.value == "1" || parseInt(inputQtdIgual.value) > pessoas.length)) {
+                inputQtdIgual.value = pessoas.length;
+            }
 
-            // Popular select de filtro de pessoas dinamicamente se necessário, mas mantemos as opções padrão e as pessoas
+            // Popular select de filtro de pessoas
             const selectFiltro = document.getElementById('filtroConsumidor');
             let filtroAtual = selectFiltro.value;
             let filtroHTML = `<option value="todos">Todos os itens</option><option value="geral">Apenas Gerais</option>`;
             pessoas.forEach(p => {
-                filtroHTML += `<option value="${p}">Consumidor: ${p}</option>`;
+                filtroHTML += `<option value="${p}">Envolve: ${p}</option>`;
             });
             selectFiltro.innerHTML = filtroHTML;
-            // Tenta restaurar o filtro anterior se ainda existir
             if ([...selectFiltro.options].some(opt => opt.value === filtroAtual)) {
                 selectFiltro.value = filtroAtual;
             }
@@ -255,8 +331,13 @@
             // Aplicar Filtro e Ordenação na lista de itens
             let itensFiltrados = [...itens];
             const filtro = document.getElementById('filtroConsumidor').value;
-            if (filtro !== 'todos') {
-                itensFiltrados = itensFiltrados.filter(item => item.consumidor === filtro);
+            if (filtro !== 'todos' && filtro !== 'geral') {
+                itensFiltrados = itensFiltrados.filter(item => {
+                    if (item.tipo === 'geral') return true;
+                    return item.consumidores && item.consumidores.includes(filtro);
+                });
+            } else if (filtro === 'geral') {
+                itensFiltrados = itensFiltrados.filter(item => item.tipo === 'geral');
             }
 
             const ordenacao = document.getElementById('ordenacaoItem').value;
@@ -267,7 +348,6 @@
             } else if (ordenacao === 'valor-asc') {
                 itensFiltrados.sort((a, b) => a.valor - b.valor);
             }
-            // 'cadastro' mantém a ordem original do array `itens`
 
             // Atualizar tabela de itens
             const tbody = document.getElementById('tabelaItens');
@@ -276,13 +356,15 @@
                 tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-slate-400 italic">Nenhum item encontrado.</td></tr>`;
             } else {
                 itensFiltrados.forEach((item) => {
-                    const consumidorLabel = item.consumidor === 'geral' ? 'Geral (Todos)' : item.consumidor;
-                    // Encontrar o índice real no array principal para exclusão correta
+                    let rateioLabel = 'Geral (Todos)';
+                    if (item.tipo === 'custom') {
+                        rateioLabel = item.consumidores.join(', ');
+                    }
                     tbody.innerHTML += `
                         <tr class="border-b border-slate-100">
                             <td class="py-2 text-slate-800">${item.nome}</td>
                             <td class="py-2 text-slate-600">R$ ${item.valor.toFixed(2)}</td>
-                            <td class="py-2 text-slate-500 text-xs"><span class="bg-slate-100 px-2 py-0.5 rounded">${consumidorLabel}</span></td>
+                            <td class="py-2 text-slate-500 text-xs truncate max-w-[150px]"><span class="bg-slate-100 px-2 py-0.5 rounded" title="${rateioLabel}">${rateioLabel}</span></td>
                             <td class="py-2 text-right">
                                 <button onclick="removerItem(${item.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can text-xs"></i></button>
                             </td>
@@ -300,78 +382,74 @@
 
             let somaBruta = itens.reduce((acc, item) => acc + item.valor, 0);
             
-            // Ler percentual de taxa digitado
             let percentualTaxa = parseFloat(document.getElementById('inputPercentualTaxa').value);
             if (isNaN(percentualTaxa) || percentualTaxa < 0) percentualTaxa = 0;
             
-            let taxaServico = somaBruta * (percentualTaxa / 100);
-            let somaTotal = somaBruta + taxaServico;
+            let taxaServicoTotal = somaBruta * (percentualTaxa / 100);
+            let somaTotalGeral = somaBruta + taxaServicoTotal;
 
-            document.getElementById('valorTaxaCalculada').innerText = `R$ ${taxaServico.toFixed(2)}`;
-            document.getElementById('valorTotalGeral').innerText = `R$ ${somaTotal.toFixed(2)}`;
+            document.getElementById('valorTaxaCalculada').innerText = `R$ ${taxaServicoTotal.toFixed(2)}`;
+            document.getElementById('valorTotalGeral').innerText = `R$ ${somaTotalGeral.toFixed(2)}`;
 
-            // Estrutura para calcular por pessoa
-            let totaisPorPessoa = {};
+            // Estrutura para computar consumo bruto por pessoa
+            let consumoBrutoPorPessoa = {};
             let itensDetalhadosPorPessoa = {};
             pessoas.forEach(p => {
-                totaisPorPessoa[p] = 0;
+                consumoBrutoPorPessoa[p] = 0;
                 itensDetalhadosPorPessoa[p] = [];
             });
 
-            let totalGeralItens = 0;
-            let itensGeraisLista = [];
-
-            // Distribuir os itens
+            // Distribuir itens (Gerais ou Customizados)
             itens.forEach(item => {
-                if (item.consumidor === 'geral') {
-                    totalGeralItens += item.valor;
-                    itensGeraisLista.push(item);
-                } else {
-                    if (totaisPorPessoa.hasOwnProperty(item.consumidor)) {
-                        itensDetalhadosPorPessoa[item.consumidor].push(item);
-                    }
+                if (item.tipo === 'geral') {
+                    let valorUnitario = pessoas.length > 0 ? item.valor / pessoas.length : 0;
+                    pessoas.forEach(p => {
+                        consumoBrutoPorPessoa[p] += valorUnitario;
+                        itensDetalhadosPorPessoa[p].push({ nome: `${item.nome} (Geral)`, valor: valorUnitario });
+                    });
+                } else if (item.tipo === 'custom') {
+                    let numParticipantesItem = item.consumidores.length;
+                    let valorUnitario = numParticipantesItem > 0 ? item.valor / numParticipantesItem : 0;
+                    item.consumidores.forEach(p => {
+                        if (consumoBrutoPorPessoa.hasOwnProperty(p)) {
+                            consumoBrutoPorPessoa[p] += valorUnitario;
+                            itensDetalhadosPorPessoa[p].push({ nome: `${item.nome} (Rateio ${numParticipantesItem}p)`, valor: valorUnitario });
+                        }
+                    });
                 }
             });
-
-            let custoGeralPorPessoa = pessoas.length > 0 ? totalGeralItens / pessoas.length : 0;
-            let taxaPorPessoa = pessoas.length > 0 ? taxaServico / pessoas.length : 0;
 
             let resultadoFinalHTML = '';
             window.dadosRelatorioBobina = {
                 pessoas: [],
                 somaBruta: somaBruta,
-                taxaServico: taxaServico,
+                taxaServico: taxaServicoTotal,
                 percentualTaxa: percentualTaxa,
-                somaTotal: somaTotal,
-                itensGerais: itensGeraisLista,
-                custoGeralPorPessoa: custoGeralPorPessoa,
-                taxaPorPessoa: taxaPorPessoa
+                somaTotal: somaTotalGeral
             };
 
             pessoas.forEach(p => {
-                let itensIndividuais = itensDetalhadosPorPessoa[p];
-                let somaIndividuais = itensIndividuais.reduce((acc, i) => acc + i.valor, 0);
-                
-                let subtotalPessoa = somaIndividuais + custoGeralPorPessoa + taxaPorPessoa;
-                totaisPorPessoa[p] = subtotalPessoa;
+                let brutoPessoa = consumoBrutoPorPessoa[p];
+                // Taxa proporcional ao consumo individual da pessoa
+                let taxaPessoa = brutoPessoa * (percentualTaxa / 100);
+                let totalPessoa = brutoPessoa + taxaPessoa;
 
                 window.dadosRelatorioBobina.pessoas.push({
                     nome: p,
-                    itensIndividuais: itensIndividuais,
-                    somaIndividuais: somaIndividuais,
-                    custoGeralPorPessoa: custoGeralPorPessoa,
-                    taxaPorPessoa: taxaPorPessoa,
-                    total: subtotalPessoa
+                    itens: itensDetalhadosPorPessoa[p],
+                    consumoBruto: brutoPessoa,
+                    taxa: taxaPessoa,
+                    total: totalPessoa
                 });
 
                 resultadoFinalHTML += `
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-semibold text-slate-800">${p}</span>
-                            <span class="text-indigo-600 font-bold">R$ ${subtotalPessoa.toFixed(2)}</span>
+                            <span class="text-indigo-600 font-bold">R$ ${totalPessoa.toFixed(2)}</span>
                         </div>
                         <div class="text-xs text-slate-500">
-                            Itens diretos: R$ ${somaIndividuais.toFixed(2)} | Parte Geral: R$ ${custoGeralPorPessoa.toFixed(2)} | Taxa: R$ ${taxaPorPessoa.toFixed(2)}
+                            Consumo: R$ ${brutoPessoa.toFixed(2)} | Taxa (${percentualTaxa}%): R$ ${taxaPessoa.toFixed(2)}
                         </div>
                     </div>
                 `;
@@ -379,6 +457,27 @@
 
             document.getElementById('listaResultados').innerHTML = resultadoFinalHTML;
             document.getElementById('secaoResultado').classList.remove('hidden');
+        }
+
+        function calcularDivisaoIgualTotal() {
+            if (itens.length === 0) return alert('Adicione itens na conta primeiro.');
+            let qtdPessoas = parseInt(document.getElementById('inputDivisaoIgualQtd').value);
+            if (isNaN(qtdPessoas) || qtdPessoas <= 0) return alert('Informe um número válido de pessoas.');
+
+            let somaBruta = itens.reduce((acc, item) => acc + item.valor, 0);
+            let percentualTaxa = parseFloat(document.getElementById('inputPercentualTaxa').value);
+            if (isNaN(percentualTaxa)) percentualTaxa = 0;
+
+            let taxaServicoTotal = somaBruta * (percentualTaxa / 100);
+            let somaTotalGeral = somaBruta + taxaServicoTotal;
+            let valorPorPessoa = somaTotalGeral / qtdPessoas;
+
+            const divResultado = document.getElementById('resultadoDivisaoIgual');
+            divResultado.classList.remove('hidden');
+            divResultado.innerHTML = `
+                <div class="text-sm font-medium text-slate-700">Dividindo <b>R$ ${somaTotalGeral.toFixed(2)}</b> (com taxa) por <b>${qtdPessoas} pessoas</b>:</div>
+                <div class="text-xl font-bold text-indigo-600 mt-1">R$ ${valorPorPessoa.toFixed(2)} para cada</div>
+            `;
         }
 
         function copiarResumoWhatsApp() {
@@ -393,21 +492,16 @@
                 texto += `👤 *${p.nome.toUpperCase()}*\n`;
                 texto += `----------------------------\n`;
                 
-                if (p.itensIndividuais.length > 0) {
-                    p.itensIndividuais.forEach(item => {
+                if (p.itens.length > 0) {
+                    p.itens.forEach(item => {
                         texto += `• ${item.nome.padEnd(18, '.')} R$ ${item.valor.toFixed(2).padStart(6)}\n`;
                     });
                 } else {
-                    texto += `• (Nenhum item exclusivo)\n`;
+                    texto += `• (Nenhum consumo registrado)\n`;
                 }
 
-                if (d.itensGerais.length > 0 && d.pessoas.length > 0) {
-                    let parteGeralUnitaria = d.custoGeralPorPessoa;
-                    texto += `• [Divisão Geral/Mesa].. R$ ${parteGeralUnitaria.toFixed(2).padStart(6)}\n`;
-                }
-
-                if (p.taxaPorPessoa > 0) {
-                    texto += `• [Taxa ${d.percentualTaxa}%]......... R$ ${p.taxaPorPessoa.toFixed(2).padStart(6)}\n`;
+                if (p.taxa > 0) {
+                    texto += `• [Taxa ${d.percentualTaxa}% s/ consumo]... R$ ${p.taxa.toFixed(2).padStart(6)}\n`;
                 }
 
                 texto += `----------------------------\n`;
