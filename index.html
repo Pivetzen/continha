@@ -190,10 +190,112 @@
 
     </main>
 
-    <!-- ÁREA DE ANÚNCIO INFERIOR (Rodapé) -->
-    <footer class="bg-slate-200 border-t border-slate-300 py-3 text-center text-xs text-slate-500 mt-auto">
-                <p class="mt-2 text-[10px] text-slate-400">Continha APP © 2026 - Todos os direitos reservados</p>
-    </footer>
+<!-- ÁREA DE ANÚNCIO INFERIOR E DOAÇÕES (Rodapé) -->
+<footer class="bg-slate-200 border-t border-slate-300 py-4 text-center text-xs text-slate-600 mt-auto">
+    
+    <!-- Espaço para Anúncio -->
+    <div class="ad-container max-w-xl mx-auto bg-slate-300 h-20 flex items-center justify-center rounded border border-dashed border-slate-400 mb-4 mx-4">
+        <span>Espaço para Anúncio (Rodapé)</span>
+    </div>
+
+    <!-- SEÇÃO DE DOAÇÃO VIA PIX -->
+    <div class="max-w-md mx-auto px-4 py-3 bg-white rounded-xl shadow-sm border border-slate-300 mb-3">
+        <p class="font-semibold text-slate-800 mb-1 flex items-center justify-center gap-1">
+            <i class="fa-solid fa-heart text-red-500"></i> Gostou do app? Apoie o projeto!
+        </p>
+        <p class="text-[11px] text-slate-500 mb-3">Sua doação ajuda a manter a ferramenta online e sem mensalidades.</p>
+        
+        <div class="flex items-center gap-2">
+            <div class="relative flex-grow">
+                <span class="absolute left-3 top-2.5 text-slate-400 font-medium">R$</span>
+                <input type="number" id="inputValorDoacao" step="1.00" min="1" value="5.00" placeholder="5,00" class="w-full border border-slate-300 rounded-lg pl-9 pr-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <button onclick="gerarECopiarPixDoacao()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                <i class="fa-regular fa-copy"></i> Copiar Pix
+            </button>
+        </div>
+        <p id="msgSucessoPix" class="text-[11px] text-emerald-600 font-semibold mt-2 hidden">
+            <i class="fa-solid fa-check-circle"></i> Código Pix Copia e Cola copiado! Abra seu banco para pagar.
+        </p>
+    </div>
+
+    <p class="mt-2 text-[10px] text-slate-400">Continha APP © 2026 - Todos os direitos reservados</p>
+</footer>
+
+    <!-- SCRIPT DE GERAÇÃO DO PIX COPIA E COLA DINÂMICO -->
+    <script>
+        // Configurações da sua Chave Pix (Ajuste com seus dados reais)
+        const CHAVE_PIX_RECEPTOR = "matheuzzu@hotmail.com"; // ex: "seuemail@gmail.com" ou "12345678900"
+        const NOME_RECEPTOR = "MATHEUS ARRUDA MAIA";                  // max 25 caracteres (sem acentos preferencialmente)
+        const CIDADE_RECEPTOR = "FORTALEZA";                        // max 15 caracteres (sem acentos)
+    
+        function gerarPayloadPix(chave, nome, cidade, valor, txid = "***") {
+            function formatField(id, value) {
+                const len = value.length.toString().padStart(2, '0');
+                return `${id}${len}${value}`;
+            }
+    
+            const gui = formatField('00', 'br.gov.bcb.pix');
+            const key = formatField('01', chave);
+            const merchantAccount = formatField('26', `${gui}${key}`);
+            
+            const categoryCode = formatField('52', '0000');
+            const currency = formatField('53', '986'); // BRL
+            const amountStr = parseFloat(valor).toFixed(2);
+            const amount = formatField('54', amountStr);
+            const country = formatField('58', 'BR');
+            const name = formatField('59', nome.substring(0, 25));
+            const city = formatField('60', cidade.substring(0, 15));
+            const additionalData = formatField('62', formatField('05', txid));
+    
+            let payload = `000201${merchantAccount}${categoryCode}${currency}${amount}${country}${name}${city}${additionalData}6304`;
+            
+            // Cálculo de CRC16 (padrão EMV do Banco Central)
+            function crc16(str) {
+                let crc = 0xFFFF;
+                for (let i = 0; i < str.length; i++) {
+                    crc ^= str.charCodeAt(i) << 8;
+                    for (let j = 0; j < 8; j++) {
+                        if ((crc & 0x8000) !== 0) {
+                            crc = (crc << 1) ^ 0x1021;
+                        } else {
+                            crc = crc << 1;
+                        }
+                    }
+                }
+                return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+            }
+    
+            return payload + crc16(payload);
+        }
+    
+        function gerarECopiarPixDoacao() {
+            const inputValor = document.getElementById('inputValorDoacao');
+            const valor = parseFloat(inputValor.value);
+    
+            if (isNaN(valor) || valor <= 0) {
+                alert('Por favor, informe um valor de doação válido.');
+                return;
+            }
+    
+            if (CHAVE_PIX_RECEPTOR === "matheuzzu@hotmail.com") {
+                alert('Configure seus dados de Pix (chave, nome e cidade) no código JavaScript para ativar doações.');
+                return;
+            }
+    
+            const pixPayload = gerarPayloadPix(CHAVE_PIX_RECEPTOR, NOME_RECEPTOR, CIDADE_RECEPTOR, valor);
+    
+            navigator.clipboard.writeText(pixPayload).then(() => {
+                const msg = document.getElementById('msgSucessoPix');
+                msg.classList.remove('hidden');
+                setTimeout(() => {
+                    msg.classList.add('hidden');
+                }, 5000);
+            }).catch(err => {
+                alert('Não foi possível copiar automaticamente. Tente novamente.');
+            });
+        }
+    </script>
 
     <!-- Lógica JavaScript do App -->
     <script>
