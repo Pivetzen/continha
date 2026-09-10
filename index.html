@@ -173,7 +173,7 @@
             </div>
 
             <button onclick="copiarResumoWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
-                <i class="fa-brands fa-whatsapp text-lg"></i> Copiar Relatório Bobina (WhatsApp)
+                <i class="fa-brands fa-whatsapp text-lg"></i> Copiar Relatório (WhatsApp)
             </button>
         </section>
 
@@ -485,7 +485,7 @@
 
             let d = window.dadosRelatorioBobina;
             let texto = "============================\n";
-            texto += "    🧾 FECHAMENTO DE MESA 🧾   \n";
+            texto += "    🧾 CONTINHA 🧾   \n";
             texto += "============================\n\n";
 
             d.pessoas.forEach(p => {
@@ -516,7 +516,7 @@
             texto += "_Gerado via Continha APP_";
 
             navigator.clipboard.writeText(texto).then(() => {
-                alert('Relatório estilo bobina copiado com sucesso! Cole no WhatsApp.');
+                alert('Relatório copiado com sucesso! Cole no WhatsApp.');
             }).catch(err => {
                 alert('Erro ao copiar relatório.');
             });
