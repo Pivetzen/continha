@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Divisor de Conta - Rachar a Mesa</title>
+    <title>Continha App - Divisor de Conta</title>
     <!-- Tailwind CSS para estilização rápida e responsiva -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Ícones FontAwesome -->
@@ -25,7 +25,7 @@
         <!-- Cabeçalho -->
         <header class="text-center mb-6">
             <h1 class="text-2xl font-bold text-slate-900 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-receipt text-indigo-600"></i> Rachar a Mesa
+                <i class="fa-solid fa-receipt text-indigo-600"></i> Continha App
             </h1>
             <p class="text-sm text-slate-600">Divida a conta do bar ou restaurante sem estresse</p>
         </header>
@@ -185,17 +185,17 @@
         <div class="ad-container max-w-xl mx-auto bg-slate-300 h-20 flex items-center justify-center rounded border border-dashed border-slate-400 mx-4">
             <span>Espaço para Anúncio (Rodapé - AdSense Banner Responsivo)</span>
         </div>
-        <p class="mt-2 text-[10px] text-slate-400">Rachar a Mesa © 2026 - Todos os direitos reservados</p>
+        <p class="mt-2 text-[10px] text-slate-400">Continha App © 2026 - Todos os direitos reservados</p>
     </footer>
 
     <!-- Lógica JavaScript do App -->
     <script>
-        let pessoas = JSON.parse(localStorage.getItem('rachar_pessoas')) || [];
-        let itens = JSON.parse(localStorage.getItem('rachar_itens')) || [];
+        let pessoas = JSON.parse(localStorage.getItem('continha_pessoas')) || [];
+        let itens = JSON.parse(localStorage.getItem('continha_itens')) || [];
 
         function salvarDados() {
-            localStorage.setItem('rachar_pessoas', JSON.stringify(pessoas));
-            localStorage.setItem('rachar_itens', JSON.stringify(itens));
+            localStorage.setItem('continha_pessoas', JSON.stringify(pessoas));
+            localStorage.setItem('continha_itens', JSON.stringify(itens));
         }
 
         function adicionarPessoa() {
@@ -485,7 +485,7 @@
 
             let d = window.dadosRelatorioBobina;
             let texto = "============================\n";
-            texto += "     🧾 FECHAMENTO DE MESA     \n";
+            texto += "      🧾 CONTINHA APP      \n";
             texto += "============================\n\n";
 
             d.pessoas.forEach(p => {
@@ -513,7 +513,7 @@
             texto += ` TAXA (${d.percentualTaxa}%): R$ ${d.taxaServico.toFixed(2)}\n`;
             texto += ` *TOTAL GERAL: R$ ${d.somaTotal.toFixed(2)}*\n`;
             texto += "============================\n";
-            texto += "_Gerado via Rachar a Mesa_";
+            texto += "_Gerado via Continha App_";
 
             navigator.clipboard.writeText(texto).then(() => {
                 alert('Relatório estilo bobina copiado com sucesso! Cole no WhatsApp.');
