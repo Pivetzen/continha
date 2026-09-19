@@ -43,9 +43,16 @@
 
         <!-- Seção 1: Participantes -->
         <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
-            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-users text-indigo-500"></i> 1. Pessoas na Mesa
-            </h2>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-md font-semibold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-users text-indigo-500"></i> 1. Pessoas na Mesa
+                </h2>
+                <!-- Botão Limpar Tudo -->
+                <button onclick="limparTudo()" class="text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition flex items-center gap-1 cursor-pointer">
+                    <i class="fa-solid fa-rotate-left"></i> Limpar Tudo
+                </button>
+            </div>
+
             <div class="flex gap-2 mb-3">
                 <input type="text" id="inputNomePessoa" placeholder="Nome da pessoa" class="flex-grow border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <button onclick="adicionarPessoa()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
@@ -190,9 +197,6 @@
 
     </main>
 
-    <!-- ÁREA DE ANÚNCIO INFERIOR E DOAÇÕES (Rodapé) -->
-    <footer class="bg-slate-200 border-t border-slate-300 py-4 text-center text-xs text-slate-600 mt-auto">
-        
     <!-- RODAPÉ FIXO NO BOTTOM -->
     <footer class="fixed bottom-0 left-0 w-full bg-slate-100 border-t border-slate-300 py-3 text-center text-xs text-slate-600 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         
@@ -218,76 +222,71 @@
     
         <p class="text-[10px] text-slate-400">Continha APP © 2026 - Todos os direitos reservados</p>
     </footer>
+
+    <!-- SCRIPT DE GERAÇÃO DO PIX COPIA E COLA DINÂMICO -->
+    <script>
+        // Configurações da sua Chave Pix
+        const CHAVE_PIX_RECEPTOR = "matheuzzu@hotmail.com";
+        const NOME_RECEPTOR = "MATHEUS ARRUDA MAIA";
+        const CIDADE_RECEPTOR = "FORTALEZA";
     
-        <!-- SCRIPT DE GERAÇÃO DO PIX COPIA E COLA DINÂMICO -->
-        <script>
-            // Configurações da sua Chave Pix (Ajuste com seus dados reais)
-            const CHAVE_PIX_RECEPTOR = "matheuzzu@hotmail.com"; // ex: "seuemail@gmail.com" ou "12345678900"
-            const NOME_RECEPTOR = "MATHEUS ARRUDA MAIA";                  // max 25 caracteres (sem acentos preferencialmente)
-            const CIDADE_RECEPTOR = "FORTALEZA";                        // max 15 caracteres (sem acentos)
-        
-            function gerarPayloadPix(chave, nome, cidade, valor, txid = "***") {
-                function formatField(id, value) {
-                    const len = value.length.toString().padStart(2, '0');
-                    return `${id}${len}${value}`;
-                }
-        
-                const gui = formatField('00', 'br.gov.bcb.pix');
-                const key = formatField('01', chave);
-                const merchantAccount = formatField('26', `${gui}${key}`);
-                
-                const categoryCode = formatField('52', '0000');
-                const currency = formatField('53', '986'); // BRL
-                const amountStr = parseFloat(valor).toFixed(2);
-                const amount = formatField('54', amountStr);
-                const country = formatField('58', 'BR');
-                const name = formatField('59', nome.substring(0, 25));
-                const city = formatField('60', cidade.substring(0, 15));
-                const additionalData = formatField('62', formatField('05', txid));
-        
-                let payload = `000201${merchantAccount}${categoryCode}${currency}${amount}${country}${name}${city}${additionalData}6304`;
-                
-                // Cálculo de CRC16 (padrão EMV do Banco Central)
-                function crc16(str) {
-                    let crc = 0xFFFF;
-                    for (let i = 0; i < str.length; i++) {
-                        crc ^= str.charCodeAt(i) << 8;
-                        for (let j = 0; j < 8; j++) {
-                            if ((crc & 0x8000) !== 0) {
-                                crc = (crc << 1) ^ 0x1021;
-                            } else {
-                                crc = crc << 1;
-                            }
+        function gerarPayloadPix(chave, nome, cidade, valor, txid = "***") {
+            function formatField(id, value) {
+                const len = value.length.toString().padStart(2, '0');
+                return `${id}${len}${value}`;
+            }
+    
+            const gui = formatField('00', 'br.gov.bcb.pix');
+            const key = formatField('01', chave);
+            const merchantAccount = formatField('26', `${gui}${key}`);
+            
+            const categoryCode = formatField('52', '0000');
+            const currency = formatField('53', '986'); // BRL
+            const amountStr = parseFloat(valor).toFixed(2);
+            const amount = formatField('54', amountStr);
+            const country = formatField('58', 'BR');
+            const name = formatField('59', nome.substring(0, 25));
+            const city = formatField('60', cidade.substring(0, 15));
+            const additionalData = formatField('62', formatField('05', txid));
+    
+            let payload = `000201${merchantAccount}${categoryCode}${currency}${amount}${country}${name}${city}${additionalData}6304`;
+            
+            function crc16(str) {
+                let crc = 0xFFFF;
+                for (let i = 0; i < str.length; i++) {
+                    crc ^= str.charCodeAt(i) << 8;
+                    for (let j = 0; j < 8; j++) {
+                        if ((crc & 0x8000) !== 0) {
+                            crc = (crc << 1) ^ 0x1021;
+                        } else {
+                            crc = crc << 1;
                         }
                     }
-                    return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
                 }
-        
-                return payload + crc16(payload);
+                return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
             }
-        
+    
+            return payload + crc16(payload);
+        }
+    
         function gerarECopiarPixDoacao() {
             const inputElement = document.getElementById('inputValorDoacao');
-            
-            // Extract only numbers from input (e.g., "R$ 5,00" -> "500")
             let rawDigits = inputElement.value.replace(/\D/g, "");
             
             if (!rawDigits) {
                 alert('Por favor, informe um valor de doação válido.');
                 return;
             }
-        
-            // Convert raw digits to float (e.g., 500 / 100 -> 5.00)
+    
             const valor = parseFloat(rawDigits) / 100;
-        
+    
             if (isNaN(valor) || valor <= 0) {
                 alert('Por favor, informe um valor de doação válido.');
                 return;
             }
-        
-            // Gerar o Payload do Pix com o valor convertido
+    
             const pixPayload = gerarPayloadPix(CHAVE_PIX_RECEPTOR, NOME_RECEPTOR, CIDADE_RECEPTOR, valor);
-        
+    
             navigator.clipboard.writeText(pixPayload).then(() => {
                 const msg = document.getElementById('msgSucessoPix');
                 if (msg) {
@@ -300,9 +299,9 @@
                 alert('Não foi possível copiar automaticamente. Tente novamente.');
             });
         }
-        </script>
+    </script>
 
-    <!-- Lógica JavaScript do App -->
+    <!-- Lógica JavaScript Principal do App -->
     <script>
         let pessoas = JSON.parse(localStorage.getItem('rachar_pessoas')) || [];
         let itens = JSON.parse(localStorage.getItem('rachar_itens')) || [];
@@ -310,6 +309,22 @@
         function salvarDados() {
             localStorage.setItem('rachar_pessoas', JSON.stringify(pessoas));
             localStorage.setItem('rachar_itens', JSON.stringify(itens));
+        }
+
+        function limparTudo() {
+            if (confirm('Tem certeza de que deseja apagar todas as pessoas e itens para começar uma nova conta do zero?')) {
+                pessoas = [];
+                itens = [];
+                localStorage.removeItem('rachar_pessoas');
+                localStorage.removeItem('rachar_itens');
+
+                document.getElementById('secaoResultado').classList.add('hidden');
+                document.getElementById('resultadoDivisaoIgual').classList.add('hidden');
+                document.getElementById('valorTaxaCalculada').innerText = 'R$ 0,00';
+                document.getElementById('valorTotalGeral').innerText = 'R$ 0,00';
+
+                atualizarInterface();
+            }
         }
 
         function adicionarPessoa() {
@@ -328,7 +343,6 @@
             const nomeRemovido = pessoas[index];
             pessoas.splice(index, 1);
             
-            // Atualizar itens onde a pessoa estava incluída
             itens.forEach(item => {
                 if (item.tipo === 'custom' && Array.isArray(item.consumidores)) {
                     item.consumidores = item.consumidores.filter(p => p !== nomeRemovido);
@@ -412,7 +426,6 @@
         }
 
         function atualizarInterface() {
-            // Atualizar lista de tags de pessoas
             const divPessoas = document.getElementById('listaPessoas');
             divPessoas.innerHTML = '';
             pessoas.forEach((p, index) => {
@@ -424,13 +437,11 @@
                 `;
             });
 
-            // Atualizar input inputDivisaoIgualQtd se estiver vazio ou igual a 1
             const inputQtdIgual = document.getElementById('inputDivisaoIgualQtd');
             if (inputQtdIgual && pessoas.length > 0 && (inputQtdIgual.value == "1" || parseInt(inputQtdIgual.value) > pessoas.length)) {
                 inputQtdIgual.value = pessoas.length;
             }
 
-            // Popular select de filtro de pessoas
             const selectFiltro = document.getElementById('filtroConsumidor');
             let filtroAtual = selectFiltro.value;
             let filtroHTML = `<option value="todos">Todos os itens</option><option value="geral">Apenas Gerais</option>`;
@@ -442,7 +453,6 @@
                 selectFiltro.value = filtroAtual;
             }
 
-            // Aplicar Filtro e Ordenação na lista de itens
             let itensFiltrados = [...itens];
             const filtro = document.getElementById('filtroConsumidor').value;
             if (filtro !== 'todos' && filtro !== 'geral') {
@@ -463,7 +473,6 @@
                 itensFiltrados.sort((a, b) => a.valor - b.valor);
             }
 
-            // Atualizar tabela de itens
             const tbody = document.getElementById('tabelaItens');
             tbody.innerHTML = '';
             if (itensFiltrados.length === 0) {
@@ -505,7 +514,6 @@
             document.getElementById('valorTaxaCalculada').innerText = `R$ ${taxaServicoTotal.toFixed(2)}`;
             document.getElementById('valorTotalGeral').innerText = `R$ ${somaTotalGeral.toFixed(2)}`;
 
-            // Estrutura para computar consumo bruto por pessoa
             let consumoBrutoPorPessoa = {};
             let itensDetalhadosPorPessoa = {};
             pessoas.forEach(p => {
@@ -513,7 +521,6 @@
                 itensDetalhadosPorPessoa[p] = [];
             });
 
-            // Distribuir itens (Gerais ou Customizados)
             itens.forEach(item => {
                 if (item.tipo === 'geral') {
                     let valorUnitario = pessoas.length > 0 ? item.valor / pessoas.length : 0;
@@ -544,7 +551,6 @@
 
             pessoas.forEach(p => {
                 let brutoPessoa = consumoBrutoPorPessoa[p];
-                // Taxa proporcional ao consumo individual da pessoa
                 let taxaPessoa = brutoPessoa * (percentualTaxa / 100);
                 let totalPessoa = brutoPessoa + taxaPessoa;
 
@@ -636,9 +642,7 @@
             });
         }
 
-        // Máscara monetária acumulativa (estilo caixa eletrônico/maquininha)
         function mascaraMoeda(input) {
-            // Remove tudo que não for dígito
             let value = input.value.replace(/\D/g, "");
             
             if (!value || value === "00") {
@@ -646,17 +650,15 @@
                 return;
             }
             
-            // Converte para número dividindo por 100 para criar as casas decimais de centavos
             let numberValue = (parseInt(value, 10) / 100).toFixed(2);
             
-            // Formata no padrão brasileiro R$ X,XX
             let formatted = numberValue
                 .replace(".", ",")
                 .replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
         
             input.value = "R$ " + formatted;
         }
-        // Inicializar dados na tela ao carregar
+
         document.addEventListener('DOMContentLoaded', () => {
             atualizarInterface();
             if (pessoas.length > 0 && itens.length > 0) {
