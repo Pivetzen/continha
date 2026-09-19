@@ -75,7 +75,7 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="text-xs text-slate-500 block mb-1">Preço Total (R$)</label>
-                        <input type="number" step="0.01" id="inputValorItem" placeholder="0,00" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="inputValorItem" placeholder="0,00" oninput="mascaraMoeda(this)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="text-xs text-slate-500 block mb-1">Tipo de Divisão</label>
@@ -384,8 +384,10 @@
 
         function adicionarItem() {
             const nomeItem = document.getElementById('inputNomeItem').value.trim();
-            const valor = parseFloat(document.getElementById('inputValorItem').value);
-            const tipoDivisao = document.getElementById('selectTipoDivisao').value;
+            
+            // Extrai dígitos para conversão monetária correta
+            let rawDigits = document.getElementById('inputValorItem').value.replace(/\D/g, "");
+            const valor = parseFloat(rawDigits) / 100;
 
             if (!nomeItem) return alert('Informe o nome do item.');
             if (isNaN(valor) || valor <= 0) return alert('Informe um valor válido.');
@@ -394,11 +396,11 @@
                 id: Date.now(),
                 nome: nomeItem,
                 valor: valor,
-                tipo: tipoDivisao,
+                tipo: document.getElementById('selectTipoDivisao').value,
                 consumidores: []
             };
 
-            if (tipoDivisao === 'custom') {
+            if (itemObj.tipo === 'custom') {
                 const checkboxes = document.querySelectorAll('.checkbox-consumidor:checked');
                 checkboxes.forEach(cb => itemObj.consumidores.push(cb.value));
                 if (itemObj.consumidores.length === 0) {
@@ -642,6 +644,7 @@
             });
         }
 
+        // Máscara monetária acumulativa
         function mascaraMoeda(input) {
             let value = input.value.replace(/\D/g, "");
             
