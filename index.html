@@ -1,676 +1,486 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Continha APP</title>
-    <!-- Favicon do site -->
-    <link rel="icon" type="image/png" href="https://cdn.pixabay.com/photo/2020/10/29/09/29/payment-5695697_1280.png">
-    <!-- Tailwind CSS para estilização rápida e responsiva -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Ícones FontAwesome -->
+    <title>Assistente de Orações</title>
+    <!-- Biblioteca leve e robusta para processar o CSV sem quebrar URLs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Ícones FontAwesome para os botões -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #2c3e50;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        header h1 {
+            color: #003366;
+            margin: 0;
+            font-variant: small-caps;
+        }
+
+        header p {
+            margin: 5px 0 0 0;
+            color: #7f8c8d;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .search-input:focus {
+            border-color: #003366;
+            box-shadow: 0 4px 12px rgba(0,51,102,0.1);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1;
+            margin-bottom: 160px; /* Espaço para o rodapé fixo */
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 5px solid #003366;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #003366;
+            font-size: 1.2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-hoje { background-color: #003366; color: white; }
+        .btn-ontem { background-color: #d4af37; color: white; }
+        .btn-unico { background-color: #2c3e50; color: white; }
+
+        button:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .ad-slot {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+            min-height: 50px;
+        }
+        
+        /* Botão Fale Conosco / WhatsApp (Flutuante Acima do Rodapé) */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 150px;
+            right: 20px;
+            background-color: #25d366;
+            color: white;
+            border-radius: 50px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-float:hover {
+            background-color: #20ba5a;
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .whatsapp-float svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+        }
+
+        /* Rodapé Fixo com Doação Pix */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #64748b;
+            z-index: 900;
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .pix-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+    </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+<body>
 
-    <!-- BANNER ADSTERRA FIXO NO TOPO -->
-    <div class="sticky top-0 left-0 w-full z-50 bg-slate-200 border-b border-slate-300 py-1.5 text-center text-xs text-slate-500 shadow-md">
-        <div class="ad-container max-w-xl mx-auto min-h-[50px] flex items-center justify-center rounded">
-            
-            <!-- SCRIPT DO ADSTERRA -->
-            <script>
-                atOptions = {
-                    'key' : 'f95477b41aad412b789767be6416723b',
-                    'format' : 'iframe',
-                    'height' : 50,
-                    'width' : 320,
-                    'params' : {}
-                };
-            </script>
-            <script src="https://www.highrevenueformat.com/f95477b41aad412b789767be6416723b/invoke.js"></script>
-    
+<header>
+    <h1>Canais de Oração</h1>
+    <p>Assista às celebrações do dia</p>
+</header>
+
+<div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Pesquisar oração ou canal..." onkeyup="filtrarCards()">
+</div>
+
+<div class="container" id="cards-container">
+    <p style="text-align: center;">Carregando orações...</p>
+</div>
+
+<!-- Botão Flutuante Fale Conosco / WhatsApp -->
+<a href="https://wa.me/5585987804628?text=Olá!%20Gostaria%20de%20sugerir%20uma%20melhoria%20para%20o%20aplicativo%20Assistente%20de%20Orações:" class="whatsapp-float" target="_blank" title="Fale Conosco">
+    <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.38c1.41.77 3.03 1.2 4.79 1.2 5.52 0 10-4.48 10-10s-4.48-10-10-10zm5.83 14.33c-.24.67-1.38 1.25-1.9 1.33-.5.08-1.14.12-3.03-.63-1.07-.43-1.76-1.12-2.48-2.12-.72-1-1.52-2.73-1.52-4.14 0-1.41.74-2.1 1.01-2.38.27-.28.59-.35.79-.35.2 0 .4 0 .58.01.19.01.44-.07.69.53.25.6.86 2.11.94 2.27.08.16.13.35.02.56-.11.21-.16.34-.32.53-.16.19-.34.42-.49.56-.16.16-.33.33-.14.65.19.32.84 1.39 1.8 2.25 1.24 1.11 2.28 1.46 2.6 1.62.32.16.51.13.7-.09.19-.22.82-.95 1.04-1.28.22-.33.44-.27.74-.16.3.11 1.91.9 2.23 1.06.32.16.54.24.62.37.08.13.08.75-.16 1.42z"/></svg>
+    Fale Conosco
+</a>
+
+<!-- RODAPÉ FIXO COM DOAÇÃO PIX -->
+<footer>
+    <div class="pix-container mx-3 sm:mx-auto mb-1">
+        <p class="font-semibold text-slate-800 mb-0.5 flex items-center justify-center gap-1 text-xs sm:text-sm">
+            <i class="fa-solid fa-heart text-red-500"></i> Gostou do app? Apoie o projeto!
+        </p>
+        <p class="text-[10px] text-slate-500 mb-2">Sua doação ajuda a manter a ferramenta online e sem mensalidades.</p>
+        
+        <div class="flex items-center gap-2">
+            <input type="text" id="inputValorDoacao" value="R$ 0,00" oninput="mascaraMoeda(this)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50">
+            <button onclick="gerarECopiarPixDoacao()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-1.5 rounded-lg text-sm transition flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0 uppercase tracking-wide">
+                <i class="fa-regular fa-copy"></i> Copiar Pix
+            </button>
         </div>
+        <p id="msgSucessoPix" class="text-[11px] text-emerald-600 font-semibold mt-1.5 hidden">
+            <i class="fa-solid fa-check-circle"></i> Código Pix Copia e Cola copiado! Abra seu banco para pagar.
+        </p>
     </div>
+    <p class="text-[10px] text-slate-400 mt-1">Assistente de Orações © 2026 - Todos os direitos reservados</p>
+</footer>
+
+<script>
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRUImoAtZ4E2g_fLMqCTh4lxQyAOLaHidHq6yIITwLOHL2s1TROu866CksJmtWvrFLnGrWHbCzKMiY4/pub?gid=0&single=true&output=csv';
     
-    <!-- Container Principal -->
-    <main class="max-w-xl w-full mx-auto p-4 flex-grow mb-48">
-        
-        <!-- Cabeçalho -->
-        <header class="text-center mb-6">
-            <h1 class="text-2xl font-bold text-slate-900 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-receipt text-indigo-600"></i> Continha APP
-            </h1>
-            <p class="text-sm text-slate-600">Divida a conta do bar ou restaurante sem estresse</p>
-        </header>
+    // Configurações da Chave Pix de Doação
+    const CHAVE_PIX_RECEPTOR = "matheuzzu@hotmail.com";
+    const NOME_RECEPTOR = "MATHEUS ARRUDA MAIA";
+    const CIDADE_RECEPTOR = "FORTALEZA";
 
-        <!-- Seção 1: Participantes -->
-        <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="text-md font-semibold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-users text-indigo-500"></i> 1. Pessoas na Mesa
-                </h2>
-                <!-- Botão Limpar Tudo -->
-                <button onclick="limparTudo()" class="text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition flex items-center gap-1 cursor-pointer">
-                    <i class="fa-solid fa-rotate-left"></i> Limpar Tudo
-                </button>
-            </div>
+    let todosItens = [];
 
-            <div class="flex gap-2 mb-3">
-                <input type="text" id="inputNomePessoa" placeholder="Nome da pessoa" class="flex-grow border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <button onclick="adicionarPessoa()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-1">
-                    <i class="fa-solid fa-plus"></i> Adicionar
-                </button>
-            </div>
-            <div id="listaPessoas" class="flex flex-wrap gap-2">
-                <!-- Inserido via JS -->
-            </div>
-        </section>
+    function buscar(termo, periodo) {
+        const data = new Date();
+        if (periodo === 'ontem') data.setDate(data.getDate() - 1);
+        const dia = String(data.getDate()).padStart(2, '0');
+        const mes = String(data.getMonth() + 1).padStart(2, '0');
+        const ano = data.getFullYear();
+        const dataFormatada = `${dia}/${mes}/${ano}`;
+        const termoBusca = `${termo} ${dataFormatada}`;
+        const urlYoutube = `https://www.youtube.com/results?search_query=${encodeURIComponent(termoBusca)}`;
+        window.open(urlYoutube, '_blank');
+    }
 
-        <!-- Seção 2: Adicionar Itens -->
-        <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
-            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-utensils text-indigo-500"></i> 2. Consumo / Itens
-            </h2>
-            <div class="space-y-3">
-                <input type="text" id="inputNomeItem" placeholder="Nome do item (ex: Cerveja, Pizza)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-xs text-slate-500 block mb-1">Preço Total (R$)</label>
-                        <input type="text" id="inputValorItem" placeholder="0,00" oninput="mascaraMoeda(this)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-500 block mb-1">Tipo de Divisão</label>
-                        <select id="selectTipoDivisao" onchange="alternarTipoDivisao()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option value="geral">Dividir para Todos</option>
-                            <option value="custom">Selecionar quem vai pagar</option>
-                        </select>
-                    </div>
-                </div>
+    // Função para criar o elemento de anúncio e forçar a execução do script
+    function criarSlotAnuncio() {
+        const div = document.createElement('div');
+        div.className = 'ad-slot';
 
-                <!-- Seletor de Participantes Específicos para o Item -->
-                <div id="containerSelecaoConsumidores" class="hidden bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <label class="text-xs font-semibold text-slate-700 block mb-2">Quem vai rachar este item?</label>
-                    <div id="checkboxesConsumidores" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                        <!-- Preenchido via JS -->
-                    </div>
-                </div>
-
-                <button onclick="adicionarItem()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-cart-plus"></i> Adicionar Item à Conta
-                </button>
-            </div>
-
-            <!-- Controles de Filtro e Ordenação dos Itens -->
-            <div class="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2 justify-between items-center text-xs">
-                <div class="w-full sm:w-auto flex items-center gap-1">
-                    <span class="text-slate-500 font-medium"><i class="fa-solid fa-filter"></i> Filtrar:</span>
-                    <select id="filtroConsumidor" onchange="atualizarInterface()" class="border border-slate-300 rounded px-2 py-1 bg-white text-slate-700 focus:outline-none">
-                        <option value="todos">Todos os itens</option>
-                        <option value="geral">Apenas Gerais</option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-auto flex items-center gap-1">
-                    <span class="text-slate-500 font-medium"><i class="fa-solid fa-arrow-sort"></i> Ordenar:</span>
-                    <select id="ordenacaoItem" onchange="atualizarInterface()" class="border border-slate-300 rounded px-2 py-1 bg-white text-slate-700 focus:outline-none">
-                        <option value="cadastro">Ordem de Lançamento</option>
-                        <option value="nome">Nome (A-Z)</option>
-                        <option value="valor-desc">Maior Valor</option>
-                        <option value="valor-asc">Menor Valor</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Tabela de Itens Lançados -->
-            <div class="mt-3 overflow-x-auto">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-200 text-slate-500 text-xs">
-                            <th class="py-2">Item</th>
-                            <th class="py-2">Valor</th>
-                            <th class="py-2">Rateio</th>
-                            <th class="py-2 text-right">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelaItens">
-                        <!-- Inserido via JS -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Seção 3: Configurações Adicionais e Cálculo -->
-        <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
-            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-calculator text-indigo-500"></i> 3. Fechamento da Conta
-            </h2>
-            
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm text-slate-700">Taxa de Serviço (%):</span>
-                    <input type="number" id="inputPercentualTaxa" value="10" min="0" max="100" step="1" onchange="calcularConta()" class="w-16 border border-slate-300 rounded-lg px-2 py-1 text-center text-sm font-semibold text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <span id="valorTaxaCalculada" class="text-sm font-medium text-slate-500">R$ 0,00</span>
-            </div>
-            
-            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center mb-4">
-                <span class="text-sm font-medium text-slate-600">Total Geral da Mesa:</span>
-                <span id="valorTotalGeral" class="text-lg font-bold text-slate-900">R$ 0,00</span>
-            </div>
-
-            <button onclick="calcularConta()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow-sm">
-                <i class="fa-solid fa-file-invoice-dollar"></i> Calcular Rateio Detalhado
-            </button>
-        </section>
-
-        <!-- Seção 4: Modo de Divisão Igualitária Geral -->
-        <section class="bg-white rounded-xl shadow-sm p-4 mb-4 border border-slate-200">
-            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-users-rectangle text-indigo-500"></i> Alternativa: Dividir Tudo Igualmente
-            </h2>
-            <div class="flex flex-col sm:flex-row gap-2 items-center">
-                <div class="flex-grow w-full">
-                    <label class="text-xs text-slate-500 block mb-1">Número de pessoas para dividir o total geral:</label>
-                    <input type="number" id="inputDivisaoIgualQtd" min="1" value="1" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <button onclick="calcularDivisaoIgualTotal()" class="w-full sm:w-auto mt-auto bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-equals"></i> Calcular Igual
-                </button>
-            </div>
-            <div id="resultadoDivisaoIgual" class="mt-3 hidden bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                <!-- Preenchido via JS -->
-            </div>
-        </section>
-
-        <!-- Seção 5: Resultados do Rateio Detalhado -->
-        <section id="secaoResultado" class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 hidden">
-            <h2 class="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-wallet text-emerald-600"></i> Resultado por Pessoa (Consumo Real)
-            </h2>
-            
-            <div id="listaResultados" class="space-y-3 mb-4">
-                <!-- Inserido via JS -->
-            </div>
-
-            <button onclick="copiarResumoWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
-                <i class="fa-brands fa-whatsapp text-lg"></i> Copiar Relatório (WhatsApp)
-            </button>
-        </section>
-
-    </main>
-
-    <!-- RODAPÉ FIXO NO BOTTOM -->
-    <footer class="fixed bottom-0 left-0 w-full bg-slate-100 border-t border-slate-300 py-3 text-center text-xs text-slate-600 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-        
-        <!-- SEÇÃO DE DOAÇÃO VIA PIX -->
-        <div class="max-w-md mx-auto px-4 py-2.5 bg-white rounded-xl shadow-sm border border-slate-300 mb-1 mx-4 sm:mx-auto">
-            <p class="font-semibold text-slate-800 mb-0.5 flex items-center justify-center gap-1">
-                <i class="fa-solid fa-heart text-red-500"></i> Gostou do app? Apoie o projeto!
-            </p>
-            <p class="text-[10px] text-slate-500 mb-2">Sua doação ajuda a manter a ferramenta online e sem mensalidades.</p>
-            
-            <div class="flex items-center gap-2">
-                <div class="relative flex-grow">
-                    <input type="text" id="inputValorDoacao" value="Digite um valor..." oninput="mascaraMoeda(this)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-                <button onclick="gerarECopiarPixDoacao()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-1.5 rounded-lg text-sm transition flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0">
-                    <i class="fa-regular fa-copy"></i> Copiar Pix
-                </button>
-            </div>
-            <p id="msgSucessoPix" class="text-[11px] text-emerald-600 font-semibold mt-1.5 hidden">
-                <i class="fa-solid fa-check-circle"></i> Código Pix Copia e Cola copiado! Abra seu banco para pagar.
-            </p>
-        </div>
-    
-        <p class="text-[10px] text-slate-400">Continha APP © 2026 - Todos os direitos reservados</p>
-    </footer>
-
-    <!-- SCRIPT DE GERAÇÃO DO PIX COPIA E COLA DINÂMICO -->
-    <script>
-        // Configurações da sua Chave Pix
-        const CHAVE_PIX_RECEPTOR = "matheuzzu@hotmail.com";
-        const NOME_RECEPTOR = "MATHEUS ARRUDA MAIA";
-        const CIDADE_RECEPTOR = "FORTALEZA";
-    
-        function gerarPayloadPix(chave, nome, cidade, valor, txid = "***") {
-            function formatField(id, value) {
-                const len = value.length.toString().padStart(2, '0');
-                return `${id}${len}${value}`;
-            }
-    
-            const gui = formatField('00', 'br.gov.bcb.pix');
-            const key = formatField('01', chave);
-            const merchantAccount = formatField('26', `${gui}${key}`);
-            
-            const categoryCode = formatField('52', '0000');
-            const currency = formatField('53', '986'); // BRL
-            const amountStr = parseFloat(valor).toFixed(2);
-            const amount = formatField('54', amountStr);
-            const country = formatField('58', 'BR');
-            const name = formatField('59', nome.substring(0, 25));
-            const city = formatField('60', cidade.substring(0, 15));
-            const additionalData = formatField('62', formatField('05', txid));
-    
-            let payload = `000201${merchantAccount}${categoryCode}${currency}${amount}${country}${name}${city}${additionalData}6304`;
-            
-            function crc16(str) {
-                let crc = 0xFFFF;
-                for (let i = 0; i < str.length; i++) {
-                    crc ^= str.charCodeAt(i) << 8;
-                    for (let j = 0; j < 8; j++) {
-                        if ((crc & 0x8000) !== 0) {
-                            crc = (crc << 1) ^ 0x1021;
-                        } else {
-                            crc = crc << 1;
-                        }
-                    }
-                }
-                return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-            }
-    
-            return payload + crc16(payload);
-        }
-    
-        function gerarECopiarPixDoacao() {
-            const inputElement = document.getElementById('inputValorDoacao');
-            let rawDigits = inputElement.value.replace(/\D/g, "");
-            
-            if (!rawDigits) {
-                alert('Por favor, informe um valor de doação válido.');
-                return;
-            }
-    
-            const valor = parseFloat(rawDigits) / 100;
-    
-            if (isNaN(valor) || valor <= 0) {
-                alert('Por favor, informe um valor de doação válido.');
-                return;
-            }
-    
-            const pixPayload = gerarPayloadPix(CHAVE_PIX_RECEPTOR, NOME_RECEPTOR, CIDADE_RECEPTOR, valor);
-    
-            navigator.clipboard.writeText(pixPayload).then(() => {
-                const msg = document.getElementById('msgSucessoPix');
-                if (msg) {
-                    msg.classList.remove('hidden');
-                    setTimeout(() => {
-                        msg.classList.add('hidden');
-                    }, 5000);
-                }
-            }).catch(err => {
-                alert('Não foi possível copiar automaticamente. Tente novamente.');
-            });
-        }
-    </script>
-
-    <!-- Lógica JavaScript Principal do App -->
-    <script>
-        let pessoas = JSON.parse(localStorage.getItem('rachar_pessoas')) || [];
-        let itens = JSON.parse(localStorage.getItem('rachar_itens')) || [];
-
-        function salvarDados() {
-            localStorage.setItem('rachar_pessoas', JSON.stringify(pessoas));
-            localStorage.setItem('rachar_itens', JSON.stringify(itens));
-        }
-
-        function limparTudo() {
-            if (confirm('Tem certeza de que deseja apagar todas as pessoas e itens para começar uma nova conta do zero?')) {
-                pessoas = [];
-                itens = [];
-                localStorage.removeItem('rachar_pessoas');
-                localStorage.removeItem('rachar_itens');
-
-                document.getElementById('secaoResultado').classList.add('hidden');
-                document.getElementById('resultadoDivisaoIgual').classList.add('hidden');
-                document.getElementById('valorTaxaCalculada').innerText = 'R$ 0,00';
-                document.getElementById('valorTotalGeral').innerText = 'R$ 0,00';
-
-                atualizarInterface();
-            }
-        }
-
-        function adicionarPessoa() {
-            const input = document.getElementById('inputNomePessoa');
-            const nome = input.value.trim();
-            if (!nome) return alert('Digite o nome da pessoa.');
-            if (pessoas.includes(nome)) return alert('Esta pessoa já foi adicionada.');
-
-            pessoas.push(nome);
-            input.value = '';
-            salvarDados();
-            atualizarInterface();
-        }
-
-        function removerPessoa(index) {
-            const nomeRemovido = pessoas[index];
-            pessoas.splice(index, 1);
-            
-            itens.forEach(item => {
-                if (item.tipo === 'custom' && Array.isArray(item.consumidores)) {
-                    item.consumidores = item.consumidores.filter(p => p !== nomeRemovido);
-                    if (item.consumidores.length === 0) item.tipo = 'geral';
-                }
-            });
-
-            salvarDados();
-            atualizarInterface();
-        }
-
-        function alternarTipoDivisao() {
-            const tipo = document.getElementById('selectTipoDivisao').value;
-            const container = document.getElementById('containerSelecaoConsumidores');
-            if (tipo === 'custom') {
-                container.classList.remove('hidden');
-                renderizarCheckboxesConsumidores();
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        function renderizarCheckboxesConsumidores() {
-            const div = document.getElementById('checkboxesConsumidores');
-            div.innerHTML = '';
-            if (pessoas.length === 0) {
-                div.innerHTML = `<span class="text-xs text-slate-400 italic">Cadastre pessoas na mesa primeiro.</span>`;
-                return;
-            }
-            pessoas.forEach(p => {
-                div.innerHTML += `
-                    <label class="inline-flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded text-xs cursor-pointer hover:bg-slate-100">
-                        <input type="checkbox" value="${p}" class="checkbox-consumidor rounded text-indigo-600 focus:ring-indigo-500" checked>
-                        <span>${p}</span>
-                    </label>
-                `;
-            });
-        }
-
-        function adicionarItem() {
-            const nomeItem = document.getElementById('inputNomeItem').value.trim();
-            
-            // Extrai dígitos para conversão monetária correta
-            let rawDigits = document.getElementById('inputValorItem').value.replace(/\D/g, "");
-            const valor = parseFloat(rawDigits) / 100;
-
-            if (!nomeItem) return alert('Informe o nome do item.');
-            if (isNaN(valor) || valor <= 0) return alert('Informe um valor válido.');
-
-            let itemObj = {
-                id: Date.now(),
-                nome: nomeItem,
-                valor: valor,
-                tipo: document.getElementById('selectTipoDivisao').value,
-                consumidores: []
+        const scriptConfig = document.createElement('script');
+        scriptConfig.type = 'text/javascript';
+        scriptConfig.text = `
+            atOptions = {
+                'key' : 'f95477b41aad412b789767be6416723b',
+                'format' : 'iframe',
+                'height' : 50,
+                'width' : 320,
+                'params' : {}
             };
+        `;
 
-            if (itemObj.tipo === 'custom') {
-                const checkboxes = document.querySelectorAll('.checkbox-consumidor:checked');
-                checkboxes.forEach(cb => itemObj.consumidores.push(cb.value));
-                if (itemObj.consumidores.length === 0) {
-                    return alert('Selecione pelo menos uma pessoa para pagar este item.');
-                }
-            }
-            
-            itens.push(itemObj);
-            
-            document.getElementById('inputNomeItem').value = '';
-            document.getElementById('inputValorItem').value = '';
-            document.getElementById('selectTipoDivisao').value = 'geral';
-            document.getElementById('containerSelecaoConsumidores').classList.add('hidden');
-            
-            salvarDados();
-            atualizarInterface();
-            calcularConta();
+        const scriptInvoke = document.createElement('script');
+        scriptInvoke.type = 'text/javascript';
+        scriptInvoke.src = 'https://www.highperformanceformat.com/f95477b41aad412b789767be6416723b/invoke.js';
+
+        div.appendChild(scriptConfig);
+        div.appendChild(scriptInvoke);
+        return div;
+    }
+
+    function renderizarCards(itens) {
+        const container = document.getElementById('cards-container');
+        container.innerHTML = ''; // Limpa os cards anteriores
+
+        if (!itens || itens.length === 0) {
+            container.innerHTML = '<p style="text-align:center;">Nenhum card encontrado.</p>';
+            return;
         }
 
-        function removerItem(id) {
-            itens = itens.filter(item => item.id !== id);
-            salvarDados();
-            atualizarInterface();
-            calcularConta();
-        }
+        // Insere anúncio inicial
+        container.appendChild(criarSlotAnuncio());
 
-        function atualizarInterface() {
-            const divPessoas = document.getElementById('listaPessoas');
-            divPessoas.innerHTML = '';
-            pessoas.forEach((p, index) => {
-                divPessoas.innerHTML += `
-                    <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1 rounded-full text-xs font-medium">
-                        ${p}
-                        <button onclick="removerPessoa(${index})" class="text-indigo-400 hover:text-red-500 ml-1"><i class="fa-solid fa-xmark"></i></button>
-                    </span>
-                `;
-            });
+        itens.forEach((item) => {
+            const titulo = item.titulo || item.TITULO || '';
+            const imagem = item.imagem || item.IMAGEM || '';
+            const tipo = (item.tipo || item.TIPO || '').trim().toLowerCase();
+            const linkOuTermo = item.link_ou_termo || item.LINK_OU_TERMO || '';
+            const ativoVal = (item.ativo || item.ATIVO || '').trim().toLowerCase();
 
-            const inputQtdIgual = document.getElementById('inputDivisaoIgualQtd');
-            if (inputQtdIgual && pessoas.length > 0 && (inputQtdIgual.value == "1" || parseInt(inputQtdIgual.value) > pessoas.length)) {
-                inputQtdIgual.value = pessoas.length;
-            }
-
-            const selectFiltro = document.getElementById('filtroConsumidor');
-            let filtroAtual = selectFiltro.value;
-            let filtroHTML = `<option value="todos">Todos os itens</option><option value="geral">Apenas Gerais</option>`;
-            pessoas.forEach(p => {
-                filtroHTML += `<option value="${p}">Envolve: ${p}</option>`;
-            });
-            selectFiltro.innerHTML = filtroHTML;
-            if ([...selectFiltro.options].some(opt => opt.value === filtroAtual)) {
-                selectFiltro.value = filtroAtual;
-            }
-
-            let itensFiltrados = [...itens];
-            const filtro = document.getElementById('filtroConsumidor').value;
-            if (filtro !== 'todos' && filtro !== 'geral') {
-                itensFiltrados = itensFiltrados.filter(item => {
-                    if (item.tipo === 'geral') return true;
-                    return item.consumidores && item.consumidores.includes(filtro);
-                });
-            } else if (filtro === 'geral') {
-                itensFiltrados = itensFiltrados.filter(item => item.tipo === 'geral');
-            }
-
-            const ordenacao = document.getElementById('ordenacaoItem').value;
-            if (ordenacao === 'nome') {
-                itensFiltrados.sort((a, b) => a.nome.localeCompare(b.nome));
-            } else if (ordenacao === 'valor-desc') {
-                itensFiltrados.sort((a, b) => b.valor - a.valor);
-            } else if (ordenacao === 'valor-asc') {
-                itensFiltrados.sort((a, b) => a.valor - b.valor);
-            }
-
-            const tbody = document.getElementById('tabelaItens');
-            tbody.innerHTML = '';
-            if (itensFiltrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-slate-400 italic">Nenhum item encontrado.</td></tr>`;
-            } else {
-                itensFiltrados.forEach((item) => {
-                    let rateioLabel = 'Geral (Todos)';
-                    if (item.tipo === 'custom') {
-                        rateioLabel = item.consumidores.join(', ');
-                    }
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-100">
-                            <td class="py-2 text-slate-800">${item.nome}</td>
-                            <td class="py-2 text-slate-600">R$ ${item.valor.toFixed(2)}</td>
-                            <td class="py-2 text-slate-500 text-xs truncate max-w-[150px]"><span class="bg-slate-100 px-2 py-0.5 rounded" title="${rateioLabel}">${rateioLabel}</span></td>
-                            <td class="py-2 text-right">
-                                <button onclick="removerItem(${item.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash-can text-xs"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
-        }
-
-        function calcularConta() {
-            if (pessoas.length === 0) {
-                document.getElementById('secaoResultado').classList.add('hidden');
+            // Se a coluna 'ativo' estiver preenchida como falso, false, não ou 0, oculta o card
+            if (ativoVal === 'falso' || ativoVal === 'false' || ativoVal === 'não' || ativoVal === 'nao' || ativoVal === '0') {
                 return;
             }
 
-            let somaBruta = itens.reduce((acc, item) => acc + item.valor, 0);
-            
-            let percentualTaxa = parseFloat(document.getElementById('inputPercentualTaxa').value);
-            if (isNaN(percentualTaxa) || percentualTaxa < 0) percentualTaxa = 0;
-            
-            let taxaServicoTotal = somaBruta * (percentualTaxa / 100);
-            let somaTotalGeral = somaBruta + taxaServicoTotal;
+            if (!titulo) return; // ignora linhas em branco
 
-            document.getElementById('valorTaxaCalculada').innerText = `R$ ${taxaServicoTotal.toFixed(2)}`;
-            document.getElementById('valorTotalGeral').innerText = `R$ ${somaTotalGeral.toFixed(2)}`;
+            const card = document.createElement('div');
+            card.className = 'card';
 
-            let consumoBrutoPorPessoa = {};
-            let itensDetalhadosPorPessoa = {};
-            pessoas.forEach(p => {
-                consumoBrutoPorPessoa[p] = 0;
-                itensDetalhadosPorPessoa[p] = [];
-            });
-
-            itens.forEach(item => {
-                if (item.tipo === 'geral') {
-                    let valorUnitario = pessoas.length > 0 ? item.valor / pessoas.length : 0;
-                    pessoas.forEach(p => {
-                        consumoBrutoPorPessoa[p] += valorUnitario;
-                        itensDetalhadosPorPessoa[p].push({ nome: `${item.nome} (Geral)`, valor: valorUnitario });
-                    });
-                } else if (item.tipo === 'custom') {
-                    let numParticipantesItem = item.consumidores.length;
-                    let valorUnitario = numParticipantesItem > 0 ? item.valor / numParticipantesItem : 0;
-                    item.consumidores.forEach(p => {
-                        if (consumoBrutoPorPessoa.hasOwnProperty(p)) {
-                            consumoBrutoPorPessoa[p] += valorUnitario;
-                            itensDetalhadosPorPessoa[p].push({ nome: `${item.nome} (Rateio ${numParticipantesItem}p)`, valor: valorUnitario });
-                        }
-                    });
-                }
-            });
-
-            let resultadoFinalHTML = '';
-            window.dadosRelatorioBobina = {
-                pessoas: [],
-                somaBruta: somaBruta,
-                taxaServico: taxaServicoTotal,
-                percentualTaxa: percentualTaxa,
-                somaTotal: somaTotalGeral
-            };
-
-            pessoas.forEach(p => {
-                let brutoPessoa = consumoBrutoPorPessoa[p];
-                let taxaPessoa = brutoPessoa * (percentualTaxa / 100);
-                let totalPessoa = brutoPessoa + taxaPessoa;
-
-                window.dadosRelatorioBobina.pessoas.push({
-                    nome: p,
-                    itens: itensDetalhadosPorPessoa[p],
-                    consumoBruto: brutoPessoa,
-                    taxa: taxaPessoa,
-                    total: totalPessoa
-                });
-
-                resultadoFinalHTML += `
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-semibold text-slate-800">${p}</span>
-                            <span class="text-indigo-600 font-bold">R$ ${totalPessoa.toFixed(2)}</span>
-                        </div>
-                        <div class="text-xs text-slate-500">
-                            Consumo: R$ ${brutoPessoa.toFixed(2)} | Taxa (${percentualTaxa}%): R$ ${taxaPessoa.toFixed(2)}
-                        </div>
-                    </div>
+            let buttonsDivHTML = '';
+            if (tipo === 'unico') {
+                buttonsDivHTML = `<button class="btn-unico">Acessar Agora</button>`;
+            } else {
+                buttonsDivHTML = `
+                    <button class="btn-hoje">Hoje</button>
+                    <button class="btn-ontem">Ontem</button>
                 `;
-            });
+            }
 
-            document.getElementById('listaResultados').innerHTML = resultadoFinalHTML;
-            document.getElementById('secaoResultado').classList.remove('hidden');
-        }
-
-        function calcularDivisaoIgualTotal() {
-            if (itens.length === 0) return alert('Adicione itens na conta primeiro.');
-            let qtdPessoas = parseInt(document.getElementById('inputDivisaoIgualQtd').value);
-            if (isNaN(qtdPessoas) || qtdPessoas <= 0) return alert('Informe um número válido de pessoas.');
-
-            let somaBruta = itens.reduce((acc, item) => acc + item.valor, 0);
-            let percentualTaxa = parseFloat(document.getElementById('inputPercentualTaxa').value);
-            if (isNaN(percentualTaxa)) percentualTaxa = 0;
-
-            let taxaServicoTotal = somaBruta * (percentualTaxa / 100);
-            let somaTotalGeral = somaBruta + taxaServicoTotal;
-            let valorPorPessoa = somaTotalGeral / qtdPessoas;
-
-            const divResultado = document.getElementById('resultadoDivisaoIgual');
-            divResultado.classList.remove('hidden');
-            divResultado.innerHTML = `
-                <div class="text-sm font-medium text-slate-700">Dividindo <b>R$ ${somaTotalGeral.toFixed(2)}</b> (com taxa) por <b>${qtdPessoas} pessoas</b>:</div>
-                <div class="text-xl font-bold text-indigo-600 mt-1">R$ ${valorPorPessoa.toFixed(2)} para cada</div>
+            card.innerHTML = `
+                <img src="${imagem}" class="card-img" alt="${titulo}">
+                <div class="card-content">
+                    <h3>${titulo}</h3>
+                    <div class="buttons">
+                        ${buttonsDivHTML}
+                    </div>
+                </div>
             `;
-        }
 
-        function copiarResumoWhatsApp() {
-            if (!window.dadosRelatorioBobina || window.dadosRelatorioBobina.pessoas.length === 0) return;
-
-            let d = window.dadosRelatorioBobina;
-            let texto = "============================\n";
-            texto += "    🧾 CONTINHA 🧾   \n";
-            texto += "============================\n\n";
-
-            d.pessoas.forEach(p => {
-                texto += `👤 *${p.nome.toUpperCase()}*\n`;
-                texto += `----------------------------\n`;
-                
-                if (p.itens.length > 0) {
-                    p.itens.forEach(item => {
-                        texto += `• ${item.nome.padEnd(18, '.')} R$ ${item.valor.toFixed(2).padStart(6)}\n`;
-                    });
-                } else {
-                    texto += `• (Nenhum consumo registrado)\n`;
-                }
-
-                if (p.taxa > 0) {
-                    texto += `• [Taxa ${d.percentualTaxa}% s/ consumo]... R$ ${p.taxa.toFixed(2).padStart(6)}\n`;
-                }
-
-                texto += `----------------------------\n`;
-                texto += `*TOTAL ${p.nome.toUpperCase()}: R$ ${p.total.toFixed(2)}*\n\n`;
-            });
-
-            texto += "============================\n";
-            texto += ` CONSUMO BRUTO: R$ ${d.somaBruta.toFixed(2)}\n`;
-            texto += ` TAXA (${d.percentualTaxa}%): R$ ${d.taxaServico.toFixed(2)}\n`;
-            texto += ` *TOTAL GERAL: R$ ${d.somaTotal.toFixed(2)}*\n`;
-            texto += "============================\n";
-            texto += "_Gerado via Continha APP_\n";
-            texto += "https://pivetzen.github.io/continha/";
-
-            navigator.clipboard.writeText(texto).then(() => {
-                alert('Relatório copiado com sucesso! Cole no WhatsApp.');
-            }).catch(err => {
-                alert('Erro ao copiar relatório.');
-            });
-        }
-
-        // Máscara monetária acumulativa
-        function mascaraMoeda(input) {
-            let value = input.value.replace(/\D/g, "");
-            
-            if (!value || value === "00") {
-                input.value = "R$ 0,00";
-                return;
+            // Atribuição de eventos nos botões
+            if (tipo === 'unico') {
+                card.querySelector('.btn-unico').onclick = () => window.open(linkOuTermo, '_blank');
+            } else {
+                card.querySelector('.btn-hoje').onclick = () => buscar(linkOuTermo, 'hoje');
+                card.querySelector('.btn-ontem').onclick = () => buscar(linkOuTermo, 'ontem');
             }
-            
-            let numberValue = (parseInt(value, 10) / 100).toFixed(2);
-            
-            let formatted = numberValue
-                .replace(".", ",")
-                .replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-        
-            input.value = "R$ " + formatted;
-        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            atualizarInterface();
-            if (pessoas.length > 0 && itens.length > 0) {
-                calcularConta();
+            container.appendChild(card);
+            container.appendChild(criarSlotAnuncio());
+        });
+    }
+
+    function filtrarCards() {
+        const termoPesquisa = document.getElementById('searchInput').value.toLowerCase().trim();
+        
+        const itensFiltrados = todosItens.filter(item => {
+            const titulo = (item.titulo || item.TITULO || '').toLowerCase();
+            const tipo = (item.tipo || item.TIPO || '').toLowerCase();
+            const linkOuTermo = (item.link_ou_termo || item.LINK_OU_TERMO || '').toLowerCase();
+            
+            return titulo.includes(termoPesquisa) || tipo.includes(termoPesquisa) || linkOuTermo.includes(termoPesquisa);
+        });
+
+        renderizarCards(itensFiltrados);
+    }
+
+    async function carregarCards() {
+        const container = document.getElementById('cards-container');
+        
+        Papa.parse(CSV_URL, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                todosItens = results.data || [];
+                renderizarCards(todosItens);
+            },
+            error: function(err) {
+                console.error('Erro ao ler CSV:', err);
+                container.innerHTML = '<p style="text-align:center; color:red;">Erro ao carregar dados da planilha. Verifique as permissões de publicação do link.</p>';
             }
         });
-    </script>
+    }
+
+    // Gerador de Payload Pix Copia e Cola
+    function gerarPayloadPix(chave, nome, cidade, valor, txid = "***") {
+        function formatField(id, value) {
+            const len = value.length.toString().padStart(2, '0');
+            return `${id}${len}${value}`;
+        }
+
+        const gui = formatField('00', 'br.gov.bcb.pix');
+        const key = formatField('01', chave);
+        const merchantAccount = formatField('26', `${gui}${key}`);
+        
+        const categoryCode = formatField('52', '0000');
+        const currency = formatField('53', '986'); // BRL
+        const amountStr = parseFloat(valor).toFixed(2);
+        const amount = formatField('54', amountStr);
+        const country = formatField('58', 'BR');
+        const name = formatField('59', nome.substring(0, 25));
+        const city = formatField('60', cidade.substring(0, 15));
+        const additionalData = formatField('62', formatField('05', txid));
+
+        let payload = `000201${merchantAccount}${categoryCode}${currency}${amount}${country}${name}${city}${additionalData}6304`;
+        
+        function crc16(str) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < str.length; i++) {
+                crc ^= str.charCodeAt(i) << 8;
+                for (let j = 0; j < 8; j++) {
+                    if ((crc & 0x8000) !== 0) {
+                        crc = (crc << 1) ^ 0x1021;
+                    } else {
+                        crc = crc << 1;
+                    }
+                }
+            }
+            return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        return payload + crc16(payload);
+    }
+
+    function gerarECopiarPixDoacao() {
+        const inputElement = document.getElementById('inputValorDoacao');
+        let rawDigits = inputElement.value.replace(/\D/g, "");
+        
+        if (!rawDigits || rawDigits === "00") {
+            alert('Por favor, informe um valor de doação válido.');
+            return;
+        }
+
+        const valor = parseFloat(rawDigits) / 100;
+
+        if (isNaN(valor) || valor <= 0) {
+            alert('Por favor, informe um valor de doação válido.');
+            return;
+        }
+
+        const pixPayload = gerarPayloadPix(CHAVE_PIX_RECEPTOR, NOME_RECEPTOR, CIDADE_RECEPTOR, valor);
+
+        navigator.clipboard.writeText(pixPayload).then(() => {
+            const msg = document.getElementById('msgSucessoPix');
+            if (msg) {
+                msg.classList.remove('hidden');
+                setTimeout(() => {
+                    msg.classList.add('hidden');
+                }, 5000);
+            }
+        }).catch(err => {
+            alert('Não foi possível copiar automaticamente. Tente novamente.');
+        });
+    }
+
+    // Máscara monetária acumulativa para o input de doação
+    function mascaraMoeda(input) {
+        let value = input.value.replace(/\D/g, "");
+        
+        if (!value || value === "00") {
+            input.value = "R$ 0,00";
+            return;
+        }
+        
+        let numberValue = (parseInt(value, 10) / 100).toFixed(2);
+        
+        let formatted = numberValue
+            .replace(".", ",")
+            .replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+    
+        input.value = "R$ " + formatted;
+    }
+
+    carregarCards();
+</script>
+
 </body>
 </html>
