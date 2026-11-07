@@ -6,6 +6,8 @@
     <title>🛒 Continha APP</title>
     <!-- Favicon do site -->
     <link rel="icon" type="image/png" href="https://cdn.pixabay.com/photo/2020/10/29/09/29/payment-5695697_1280.png">
+    <!-- Biblioteca PapaParse para ler CSV da Planilha -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- Tailwind CSS para estilização rápida e responsiva -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Ícones FontAwesome -->
@@ -24,26 +26,40 @@
         #payment-request-button {
             min-height: 35px;
         }
+        /* Estilo do Banner Dinâmico no Topo */
+        .ad-banner-slot {
+            width: 100%;
+            max-width: 576px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .ad-banner-slot a {
+            display: block;
+            width: 100%;
+            text-decoration: none;
+        }
+        .ad-banner-slot img {
+            width: 100%;
+            height: 50px;
+            object-fit: cover;
+            display: block;
+            transition: opacity 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- BANNER ADSTERRA FIXO NO TOPO -->
-    <div class="sticky top-0 left-0 w-full z-50 bg-slate-200 border-b border-slate-300 py-1.5 text-center text-xs text-slate-500 shadow-md">
-        <div class="ad-container max-w-xl mx-auto min-h-[50px] flex items-center justify-center rounded">
-            
-            <!-- SCRIPT DO ADSTERRA -->
-            <script>
-                atOptions = {
-                    'key' : 'f95477b41aad412b789767be6416723b',
-                    'format' : 'iframe',
-                    'height' : 50,
-                    'width' : 320,
-                    'params' : {}
-                };
-            </script>
-            <script src="https://www.highrevenueformat.com/f95477b41aad412b789767be6416723b/invoke.js"></script>
-    
+    <!-- BANNER DE ANÚNCIOS DINÂMICO FIXO NO TOPO -->
+    <div class="sticky top-0 left-0 w-full z-50 bg-slate-200 border-b border-slate-300 py-1 text-center shadow-md">
+        <div id="topo-banner-container" class="ad-banner-slot">
+            <!-- Carregado via script da nova planilha exclusiva -->
+            <a href="#" id="topoAdLink" target="_blank" rel="noopener">
+                <img id="topoAdImg" src="" alt="Publicidade">
+            </a>
         </div>
     </div>
     
@@ -245,9 +261,85 @@
         <p class="text-[10px] text-slate-400">Continha APP © 2026 - Todos os direitos reservados</p>
     </footer>
 
+    <!-- SCRIPT DE CARREGAMENTO DOS ANÚNCIOS DA NOVA PLANILHA EXCLUSIVA -->
+    <script>
+        // ⚠️ Substitua abaixo pelo ID da nova planilha exclusiva do Continha APP e o GID da aba
+        const SPREADSHEET_ID = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSQjjD6WLxd2v6WnkS8MAyEC-mhrJr08VGXT9vZfmVmsJvisCHXFed_U148qZirgq94mQ8cJI-2yJ6s/pub?output=csv';
+        const ANUNCIOS_GID = '0'; 
+        const ADS_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${ANUNCIOS_GID}&t=${Date.now()}`;
+
+        let todosAnuncios = [];
+        let currentIndex = 0;
+
+        function buildAbsoluteURL(rawPath) {
+            if (!rawPath) return '';
+            if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+                return rawPath;
+            }
+            let cleanPath = rawPath.replace(/^["'\/]+|["'\s]+$/g, '');
+            let basePath = window.location.origin + window.location.pathname;
+            if (!basePath.endsWith('/')) {
+                basePath += '/';
+            }
+            return basePath + cleanPath;
+        }
+
+        async function carregarAnunciosTopo() {
+            try {
+                const response = await fetch(ADS_URL, { cache: "no-store" });
+                if (!response.ok) return;
+                const csvText = await response.text();
+                
+                const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+                const data = parsed.data || [];
+
+                todosAnuncios = data.filter(row => {
+                    const img = row.ImagemBanner || row.imagembanner || row.IMAGEMBANNER || '';
+                    return img.trim() !== '';
+                }).map(row => ({
+                    ImagemBanner: (row.ImagemBanner || row.imagembanner || '').trim(),
+                    LinkDestino: (row.LinkDestino || row.linkdestino || '#').trim(),
+                    AltText: (row.AltText || row.alttext || 'Publicidade').trim()
+                }));
+
+                if (todosAnuncios.length > 0) {
+                    exibirAnuncioAtual();
+                    if (todosAnuncios.length > 1) {
+                        setInterval(() => {
+                            currentIndex = (currentIndex + 1) % todosAnuncios.length;
+                            exibirAnuncioAtual();
+                        }, 6000);
+                    }
+                }
+            } catch (e) {
+                console.error("Erro ao carregar banners do topo:", e);
+            }
+        }
+
+        function exibirAnuncioAtual() {
+            const ad = todosAnuncios[currentIndex];
+            const imgEl = document.getElementById('topoAdImg');
+            const linkEl = document.getElementById('topoAdLink');
+
+            if (!ad || !imgEl || !linkEl) return;
+
+            imgEl.style.opacity = '0';
+            setTimeout(() => {
+                linkEl.href = ad.LinkDestino || '#';
+                linkEl.title = ad.AltText || 'Publicidade';
+                imgEl.src = buildAbsoluteURL(ad.ImagemBanner);
+                imgEl.alt = ad.AltText || 'Publicidade';
+                imgEl.style.opacity = '1';
+            }, 150);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarAnunciosTopo();
+        });
+    </script>
+
     <!-- SCRIPT DE GERAÇÃO DO PIX E STRIPE -->
     <script>
-        // Configurações da Chave Pix
         const CHAVE_PIX_RECEPTOR = "matheuzzu@hotmail.com";
         const NOME_RECEPTOR = "MATHEUS ARRUDA MAIA";
         const CIDADE_RECEPTOR = "FORTALEZA";
@@ -263,7 +355,7 @@
             const merchantAccount = formatField('26', `${gui}${key}`);
             
             const categoryCode = formatField('52', '0000');
-            const currency = formatField('53', '986'); // BRL
+            const currency = formatField('53', '986');
             const amountStr = parseFloat(valor).toFixed(2);
             const amount = formatField('54', amountStr);
             const country = formatField('58', 'BR');
@@ -338,7 +430,7 @@
         }
 
         function inicializarStripePaymentRequest() {
-            const valorEmCentavos = obterValorEmCentavos() || 500; // Valor padrão de R$ 5,00
+            const valorEmCentavos = obterValorEmCentavos() || 500;
 
             paymentRequest = stripe.paymentRequest({
                 country: 'BR',
@@ -478,7 +570,6 @@
         function adicionarItem() {
             const nomeItem = document.getElementById('inputNomeItem').value.trim();
             
-            // Extrai dígitos para conversão monetária correta
             let rawDigits = document.getElementById('inputValorItem').value.replace(/\D/g, "");
             const valor = parseFloat(rawDigits) / 100;
 
@@ -738,7 +829,6 @@
             });
         }
 
-        // Máscara monetária acumulativa
         function mascaraMoeda(input) {
             let value = input.value.replace(/\D/g, "");
             
