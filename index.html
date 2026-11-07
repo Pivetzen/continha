@@ -10,6 +10,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Ícones FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SDK Oficial do Stripe para suporte a Google Pay / Apple Pay -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        .botoes-doacao-container {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .botoes-doacao-container > * {
+            flex: 1;
+        }
+        #payment-request-button {
+            min-height: 35px;
+        }
+    </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
 
@@ -202,21 +217,26 @@
     <!-- RODAPÉ FIXO NO BOTTOM -->
     <footer class="fixed bottom-0 left-0 w-full bg-slate-100 border-t border-slate-300 py-3 text-center text-xs text-slate-600 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         
-        <!-- SEÇÃO DE DOAÇÃO VIA PIX -->
-        <div class="max-w-md mx-auto px-4 py-2.5 bg-white rounded-xl shadow-sm border border-slate-300 mb-1 mx-4 sm:mx-auto">
+        <!-- SEÇÃO DE DOAÇÃO VIA PIX E CARTEIRA DIGITAL -->
+        <div class="max-w-md mx-auto px-4 py-2 bg-white rounded-xl shadow-sm border border-slate-300 mb-1 mx-4 sm:mx-auto">
             <p class="font-semibold text-slate-800 mb-0.5 flex items-center justify-center gap-1">
                 <i class="fa-solid fa-heart text-red-500"></i> Gostou do app? Apoie o projeto!
             </p>
-            <p class="text-[10px] text-slate-500 mb-2">Sua doação ajuda a manter a ferramenta online e sem mensalidades.</p>
+            <p class="text-[10px] text-slate-500 mb-1.5">Sua doação ajuda a manter a ferramenta online e sem mensalidades.</p>
             
-            <div class="flex items-center gap-2">
-                <div class="relative flex-grow">
-                    <input type="text" id="inputValorDoacao" value="Digite um valor..." oninput="mascaraMoeda(this)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                </div>
-                <button onclick="gerarECopiarPixDoacao()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-1.5 rounded-lg text-sm transition flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0">
+            <div class="relative mb-1.5">
+                <input type="text" id="inputValorDoacao" value="Digite um valor..." oninput="mascaraMoeda(this); atualizarValorStripe();" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div class="botoes-doacao-container">
+                <button onclick="gerarECopiarPixDoacao()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shrink-0">
                     <i class="fa-regular fa-copy"></i> Copiar Pix
                 </button>
+                
+                <!-- Container nativo onde o Stripe renderiza o botão do Google Pay / Apple Pay -->
+                <div id="payment-request-button"></div>
             </div>
+
             <p id="msgSucessoPix" class="text-[11px] text-emerald-600 font-semibold mt-1.5 hidden">
                 <i class="fa-solid fa-check-circle"></i> Código Pix Copia e Cola copiado! Abra seu banco para pagar.
             </p>
@@ -225,9 +245,9 @@
         <p class="text-[10px] text-slate-400">Continha APP © 2026 - Todos os direitos reservados</p>
     </footer>
 
-    <!-- SCRIPT DE GERAÇÃO DO PIX COPIA E COLA DINÂMICO -->
+    <!-- SCRIPT DE GERAÇÃO DO PIX E STRIPE -->
     <script>
-        // Configurações da sua Chave Pix
+        // Configurações da Chave Pix
         const CHAVE_PIX_RECEPTOR = "matheuzzu@hotmail.com";
         const NOME_RECEPTOR = "MATHEUS ARRUDA MAIA";
         const CIDADE_RECEPTOR = "FORTALEZA";
@@ -301,6 +321,77 @@
                 alert('Não foi possível copiar automaticamente. Tente novamente.');
             });
         }
+    </script>
+
+    <!-- Script de Inicialização do Stripe / Carteiras Digitais -->
+    <script>
+        const stripe = Stripe('pk_test_51UJtg55za26L88QrFp8w5PVKFDPbPnJU3afov2C16lYwipoNUk46mBYr9AiX8dHN90jAymsWjyl9p1LmS8YLJhTg00K99gqHIQ');
+
+        let paymentRequest;
+        let prButton;
+
+        function obterValorEmCentavos() {
+            const inputElement = document.getElementById('inputValorDoacao');
+            let rawDigits = inputElement.value.replace(/\D/g, "");
+            if (!rawDigits) return 0;
+            return parseInt(rawDigits, 10);
+        }
+
+        function inicializarStripePaymentRequest() {
+            const valorEmCentavos = obterValorEmCentavos() || 500; // Valor padrão de R$ 5,00
+
+            paymentRequest = stripe.paymentRequest({
+                country: 'BR',
+                currency: 'brl',
+                total: {
+                    label: 'Apoio Continha APP',
+                    amount: valorEmCentavos,
+                },
+                requestPayerName: true,
+                requestPayerEmail: true,
+            });
+
+            const elements = stripe.elements();
+            prButton = elements.create('paymentRequestButton', {
+                paymentRequest: paymentRequest,
+                style: {
+                    paymentRequestButton: {
+                        type: 'donate',
+                        theme: 'dark',
+                        height: '35px',
+                    },
+                },
+            });
+
+            paymentRequest.canMakePayment().then(function(result) {
+                if (result) {
+                    prButton.mount('#payment-request-button');
+                } else {
+                    document.getElementById('payment-request-button').style.display = 'none';
+                }
+            });
+
+            paymentRequest.on('paymentmethod', async (ev) => {
+                ev.complete('success');
+                alert('Muito obrigado pela sua doação! ❤️');
+            });
+        }
+
+        function atualizarValorStripe() {
+            const valorEmCentavos = obterValorEmCentavos();
+            if (paymentRequest && valorEmCentavos > 0) {
+                paymentRequest.update({
+                    total: {
+                        label: 'Apoio Continha APP',
+                        amount: valorEmCentavos,
+                    },
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarStripePaymentRequest();
+        });
     </script>
 
     <!-- Lógica JavaScript Principal do App -->
