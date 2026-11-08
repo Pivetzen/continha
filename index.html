@@ -15,17 +15,6 @@
     <!-- SDK Oficial do Stripe para suporte a Google Pay / Apple Pay -->
     <script src="https://js.stripe.com/v3/"></script>
     <style>
-        .botoes-doacao-container {
-            display: flex;
-            gap: 6px;
-            margin-top: 6px;
-        }
-        .botoes-doacao-container > * {
-            flex: 1;
-        }
-        #payment-request-button {
-            min-height: 35px;
-        }
         /* Estilo do Banner Dinâmico no Topo */
         .ad-banner-slot {
             width: 100%;
@@ -64,7 +53,7 @@
     </div>
     
     <!-- Container Principal -->
-    <main class="max-w-xl w-full mx-auto p-4 flex-grow mb-48">
+    <main class="max-w-xl w-full mx-auto p-4 flex-grow mb-56">
         
         <!-- Cabeçalho -->
         <header class="text-center mb-6">
@@ -108,7 +97,7 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="text-xs text-slate-500 block mb-1">Preço Total (R$)</label>
-                        <input type="text" id="inputValorItem" placeholder="0,00" oninput="mascaraMoeda(this)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="inputValorItem" placeholder="0,00" oninput="mascaraMoedaItem(this)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="text-xs text-slate-500 block mb-1">Tipo de Divisão</label>
@@ -231,39 +220,58 @@
     </main>
 
     <!-- RODAPÉ FIXO NO BOTTOM -->
-    <footer class="fixed bottom-0 left-0 w-full bg-slate-100 border-t border-slate-300 py-3 text-center text-xs text-slate-600 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+    <footer class="fixed bottom-0 left-0 w-full bg-slate-100 border-t border-slate-300 py-2.5 text-center text-xs text-slate-600 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         
-        <!-- SEÇÃO DE DOAÇÃO VIA PIX E CARTEIRA DIGITAL -->
-        <div class="max-w-md mx-auto px-4 py-2 bg-white rounded-xl shadow-sm border border-slate-300 mb-1 mx-4 sm:mx-auto">
-            <p class="font-semibold text-slate-800 mb-0.5 flex items-center justify-center gap-1">
+        <!-- SEÇÃO DE DOAÇÃO / APOIO -->
+        <div class="max-w-md mx-auto px-3 py-2 bg-white rounded-xl shadow-sm border border-slate-300 mb-1 mx-3 sm:mx-auto">
+            <p class="font-semibold text-slate-800 mb-1.5 flex items-center justify-center gap-1 text-xs">
                 <i class="fa-solid fa-heart text-red-500"></i> Gostou do app? Apoie o projeto!
             </p>
-            <p class="text-[10px] text-slate-500 mb-1.5">Sua doação ajuda a manter a ferramenta online e sem mensalidades.</p>
             
-            <div class="relative mb-1.5">
-                <input type="text" id="inputValorDoacao" value="Digite um valor..." oninput="mascaraMoeda(this); atualizarValorStripe();" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-800 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-
-            <div class="botoes-doacao-container">
-                <button onclick="gerarECopiarPixDoacao()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shrink-0">
+            <!-- Opção 1: Pix Personalizado (Digitar Valor) -->
+            <div class="flex items-center gap-2 mb-2">
+                <div class="relative flex-grow">
+                    <input type="text" id="inputValorDoacao" value="Digite um valor..." inputmode="decimal" pattern="[0-9]*" oninput="mascaraMoedaDoacao(this)" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-800 text-center focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <button onclick="gerarECopiarPixDoacao()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1 cursor-pointer shadow-sm shrink-0 whitespace-nowrap">
                     <i class="fa-regular fa-copy"></i> Copiar Pix
                 </button>
-                
-                <!-- Container nativo onde o Stripe renderiza o botão do Google Pay / Apple Pay -->
-                <div id="payment-request-button"></div>
             </div>
-
-            <p id="msgSucessoPix" class="text-[11px] text-emerald-600 font-semibold mt-1.5 hidden">
+            <p id="msgSucessoPix" class="text-[10px] text-emerald-600 font-semibold mb-2 hidden">
                 <i class="fa-solid fa-check-circle"></i> Código Pix Copia e Cola copiado! Abra seu banco para pagar.
             </p>
+
+            <!-- Divisor sutil -->
+            <div class="border-t border-slate-200 my-1.5 pt-1.5">
+                <p class="text-[10px] text-slate-400 mb-1">Ou escolha um valor via Cartão / Pix (InfinitePay):</p>
+                
+                <!-- Opção 2: Grid de Botões InfinitePay abaixo -->
+                <div class="grid grid-cols-4 gap-1.5 w-full">
+                    <a href="https://link.infinitepay.io/matheusmaia_32/VC1BLUEtSQ-sTlL5IePTQ-10,00" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center justify-center py-1.5 px-1 bg-[#00D632] hover:bg-[#00B82B] text-black font-semibold rounded-lg shadow-sm transition-transform active:scale-95 text-decoration-none">
+                        <span class="text-[9px] uppercase tracking-wider opacity-80 leading-none">Doar</span>
+                        <span class="text-xs font-extrabold mt-0.5">R$ 10</span>
+                    </a>
+                    <a href="https://link.infinitepay.io/matheusmaia_32/VC1DLUMtSQ-xL8lVxgLO0-50,00" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center justify-center py-1.5 px-1 bg-[#00D632] hover:bg-[#00B82B] text-black font-semibold rounded-lg shadow-sm transition-transform active:scale-95 text-decoration-none">
+                        <span class="text-[9px] uppercase tracking-wider opacity-80 leading-none">Doar</span>
+                        <span class="text-xs font-extrabold mt-0.5">R$ 50</span>
+                    </a>
+                    <a href="https://link.infinitepay.io/matheusmaia_32/VC1DLUMtSQ-7uZQXCY1fs-100,00" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center justify-center py-1.5 px-1 bg-[#00D632] hover:bg-[#00B82B] text-black font-semibold rounded-lg shadow-sm transition-transform active:scale-95 text-decoration-none">
+                        <span class="text-[9px] uppercase tracking-wider opacity-80 leading-none">Doar</span>
+                        <span class="text-xs font-extrabold mt-0.5">R$ 100</span>
+                    </a>
+                    <a href="https://link.infinitepay.io/matheusmaia_32/VC1DLUMtSQ-FoXoBv2yil-200,00" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center justify-center py-1.5 px-1 bg-[#00D632] hover:bg-[#00B82B] text-black font-semibold rounded-lg shadow-sm transition-transform active:scale-95 text-decoration-none">
+                        <span class="text-[9px] uppercase tracking-wider opacity-80 leading-none">Doar</span>
+                        <span class="text-xs font-extrabold mt-0.5">R$ 200</span>
+                    </a>
+                </div>
+            </div>
         </div>
     
-        <p class="text-[10px] text-slate-400">Continha APP © 2026 - Todos os direitos reservados</p>
+        <p class="text-[10px] text-slate-400 mt-1">Continha APP © 2026 - Todos os direitos reservados</p>
     </footer>
 
     <!-- SCRIPT DE CARREGAMENTO DOS ANÚNCIOS DA NOVA PLANILHA EXCLUSIVA -->
     <script>
-        // ⚠️ Substitua abaixo pelo ID da nova planilha exclusiva do Continha APP e o GID da aba
         const SPREADSHEET_ID = '12Nl7154SfNXu2mQKLQ6llh40rv3yIQcMDqCP7o5sMjs';
         const ANUNCIOS_GID = '0'; 
         const ADS_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${ANUNCIOS_GID}&t=${Date.now()}`;
@@ -338,7 +346,7 @@
         });
     </script>
 
-    <!-- SCRIPT DE GERAÇÃO DO PIX E STRIPE -->
+    <!-- SCRIPT DE GERAÇÃO DO PIX -->
     <script>
         const CHAVE_PIX_RECEPTOR = "matheuzzu@hotmail.com";
         const NOME_RECEPTOR = "MATHEUS ARRUDA MAIA";
@@ -387,7 +395,7 @@
             const inputElement = document.getElementById('inputValorDoacao');
             let rawDigits = inputElement.value.replace(/\D/g, "");
             
-            if (!rawDigits) {
+            if (!rawDigits || rawDigits === "00") {
                 alert('Por favor, informe um valor de doação válido.');
                 return;
             }
@@ -413,77 +421,23 @@
                 alert('Não foi possível copiar automaticamente. Tente novamente.');
             });
         }
-    </script>
 
-    <!-- Script de Inicialização do Stripe / Carteiras Digitais -->
-    <script>
-        const stripe = Stripe('pk_test_51UJtg55za26L88QrFp8w5PVKFDPbPnJU3afov2C16lYwipoNUk46mBYr9AiX8dHN90jAymsWjyl9p1LmS8YLJhTg00K99gqHIQ');
-
-        let paymentRequest;
-        let prButton;
-
-        function obterValorEmCentavos() {
-            const inputElement = document.getElementById('inputValorDoacao');
-            let rawDigits = inputElement.value.replace(/\D/g, "");
-            if (!rawDigits) return 0;
-            return parseInt(rawDigits, 10);
-        }
-
-        function inicializarStripePaymentRequest() {
-            const valorEmCentavos = obterValorEmCentavos() || 500;
-
-            paymentRequest = stripe.paymentRequest({
-                country: 'BR',
-                currency: 'brl',
-                total: {
-                    label: 'Apoio Continha APP',
-                    amount: valorEmCentavos,
-                },
-                requestPayerName: true,
-                requestPayerEmail: true,
-            });
-
-            const elements = stripe.elements();
-            prButton = elements.create('paymentRequestButton', {
-                paymentRequest: paymentRequest,
-                style: {
-                    paymentRequestButton: {
-                        type: 'donate',
-                        theme: 'dark',
-                        height: '35px',
-                    },
-                },
-            });
-
-            paymentRequest.canMakePayment().then(function(result) {
-                if (result) {
-                    prButton.mount('#payment-request-button');
-                } else {
-                    document.getElementById('payment-request-button').style.display = 'none';
-                }
-            });
-
-            paymentRequest.on('paymentmethod', async (ev) => {
-                ev.complete('success');
-                alert('Muito obrigado pela sua doação! ❤️');
-            });
-        }
-
-        function atualizarValorStripe() {
-            const valorEmCentavos = obterValorEmCentavos();
-            if (paymentRequest && valorEmCentavos > 0) {
-                paymentRequest.update({
-                    total: {
-                        label: 'Apoio Continha APP',
-                        amount: valorEmCentavos,
-                    },
-                });
+        function mascaraMoedaDoacao(input) {
+            let value = input.value.replace(/\D/g, "");
+            
+            if (!value || value === "00") {
+                input.value = "Digite um valor...";
+                return;
             }
+            
+            let numberValue = (parseInt(value, 10) / 100).toFixed(2);
+            
+            let formatted = numberValue
+                .replace(".", ",")
+                .replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+        
+            input.value = "R$ " + formatted;
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            inicializarStripePaymentRequest();
-        });
     </script>
 
     <!-- Lógica JavaScript Principal do App -->
@@ -829,7 +783,7 @@
             });
         }
 
-        function mascaraMoeda(input) {
+        function mascaraMoedaItem(input) {
             let value = input.value.replace(/\D/g, "");
             
             if (!value || value === "00") {
